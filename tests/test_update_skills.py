@@ -212,6 +212,11 @@ class BoundaryTests(unittest.TestCase):
                 if pushes:
                     self.assertIn(f"--force-with-lease=refs/heads/{u.BRANCH}:", pushes[0].args)
                 self.assertEqual(remote.call_count, 0 if previous else 1)
+                if previous is None:
+                    # Use the actual POST body, not the empty-body API fixture:
+                    # generated help text must pass the same guard as a real PR.
+                    posted = remote.call_args.args[2]
+                    u.verify_pr(dict(pr(head), body=posted["body"]), head)
                 self.assertEqual(processes.call_count, 2)
                 for process in processes.call_args_list:
                     self.assertNotIn("GH_TOKEN", process.kwargs["env"])

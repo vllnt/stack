@@ -346,7 +346,7 @@ def main():
                 "origin", f"{head}:refs/heads/{BRANCH}")
         if pr is None:
             pr = api("pulls", "POST", {"title": "Update packaged Vstack skills", "head": BRANCH, "base": "main",
-                 "body": f"Generated from trusted main `{base}` and upstream `{pin}`.\n\nAdd `manual-review` or MANUAL HOLD to stop automation.\n\n{MARKER}"})
+                 "body": f"Generated from trusted main `{base}` and upstream `{pin}`.\n\nAdd the `manual-review` label to stop automation.\n\n{MARKER}"})
         merge(pr, head, base, pin)
 
 
