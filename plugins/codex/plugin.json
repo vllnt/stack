@@ -1,0 +1,10 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "author": {
+    "name": "vllnt"
+  },
+  "description": "Vstack portable workflows and engineering principles.",
+  "license": "MIT",
+  "name": "vstack",
+  "version": "0.1.0-dev.1"
+}

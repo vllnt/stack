@@ -1,0 +1,20 @@
+{
+  "interface": {
+    "displayName": "Vstack"
+  },
+  "name": "vllnt-stack",
+  "plugins": [
+    {
+      "category": "Productivity",
+      "name": "vstack",
+      "policy": {
+        "authentication": "ON_INSTALL",
+        "installation": "AVAILABLE"
+      },
+      "source": {
+        "path": "./plugins/codex",
+        "source": "local"
+      }
+    }
+  ]
+}

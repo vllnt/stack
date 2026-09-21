@@ -1,0 +1,12 @@
+{
+  "name": "vllnt-stack",
+  "owner": {
+    "name": "vllnt"
+  },
+  "plugins": [
+    {
+      "name": "vstack",
+      "source": "./plugins/claude"
+    }
+  ]
+}
