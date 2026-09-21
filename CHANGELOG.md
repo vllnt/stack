@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Accept the user-requested, reviewed Skills update at `472c216f2f043f0add1f83540cc46ea53d20a7cd` as `0.1.0-dev.5`, including collaboration principles and bundled quality-validation guidance. Preserve automatic sensitive-change holds; this update uses a separate protected PR.
+
 - Record independently verified live source-push dispatch, automatic protected update/merge, post-merge no-op, and sensitive-change hold receipts; retain explicit host-runtime and scheduled-timer coverage limits.
 
 - Update packaged skills from `ffb5025dfa9f25fab868a4f12f9fb661ac7bfb87` to `14b8ad3dbba8ea820478d3ea2d379c2863de56d9` (0.1.0-dev.4).
