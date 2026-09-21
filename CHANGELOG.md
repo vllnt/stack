@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Update packaged skills from `ffb5025dfa9f25fab868a4f12f9fb661ac7bfb87` to `14b8ad3dbba8ea820478d3ea2d379c2863de56d9` (0.1.0-dev.4).
+
 - Update packaged skills from `baa90d516fe19e55128e6df8691bb619e1d4f822` to `ffb5025dfa9f25fab868a4f12f9fb661ac7bfb87` (0.1.0-dev.3).
 
 - Wait within the existing bounded CI loop for a known previous PR head to propagate after a leased update; retain immediate stops for manual holds and unexpected PR/branch identities, with no repeated writes.

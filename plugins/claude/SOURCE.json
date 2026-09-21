@@ -1,6 +1,6 @@
 {
   "files": {
-    ".claude-plugin/plugin.json": "b46fc27d1e6c6d6fc61addb5a2858d697dca470802af1bedd407822fa03a5e5d",
+    ".claude-plugin/plugin.json": "ae919c00243ca616f002953a6310cdf7da451788152ea722f1f7ccae1b1912c0",
     "LICENSE": "24ba061a4603738ddd5105ef4abc198eeded5ac7efce23b360561816f4dd6559",
     "skills/build-landing-page/README.md": "46a280eadac8962180cf3f0c42eb0e845a3b0156a644569182d932881e1d51f8",
     "skills/build-landing-page/SKILL.md": "b08e4963d6149f3647b28a0d9dccdc8793812abab95a1d081d93699e142de0f0",
@@ -137,7 +137,7 @@
     "skills/vllnt-thinking-principles/SKILL.md": "3d1229f311f9d58ec3335a35e9019afda8cf59dff5c20730a42593c17b40b0b9"
   },
   "upstream": {
-    "commit": "ffb5025dfa9f25fab868a4f12f9fb661ac7bfb87",
+    "commit": "14b8ad3dbba8ea820478d3ea2d379c2863de56d9",
     "repository": "https://github.com/vllnt/skills.git"
   }
 }
