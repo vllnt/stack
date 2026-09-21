@@ -179,14 +179,41 @@ def verify_pr(pr, head):
         raise Stop("existing PR is held or has an unexpected identity; leave untouched")
 
 
+def load_resolutions():
+    # Owned by reviewed main, never an event input or generated candidate.
+    # main() verifies the clean checkout identity before this read.
+    path = Path(__file__).resolve().parents[1] / ".github/skills-update-resolutions.json"
+    entries = json.loads(path.read_text())
+    if not isinstance(entries, list):
+        raise Stop("resolution acknowledgements must be a list")
+    result = {}
+    for entry in entries:
+        if (not isinstance(entry, dict) or set(entry) != {"pr", "head"} or
+                type(entry["pr"]) is not int or entry["pr"] < 1 or entry["pr"] in result):
+            raise Stop("invalid or duplicate resolution acknowledgement")
+        result[entry["pr"]] = sha(entry["head"])
+    return result
+
+
+def check_closed_holds(history, resolutions):
+    closed = {p["number"]: p for p in history if p["state"] == "closed" and not p.get("merged_at")}
+    for number, head in resolutions.items():
+        pr = closed.get(number)
+        if (pr is None or pr["head"]["sha"] != head or pr["head"]["ref"] != BRANCH or
+                (pr["head"].get("repo") or {}).get("full_name") != REPO or pr["base"]["ref"] != "main"):
+            raise Stop("resolution acknowledgement does not match an exact closed unmerged PR")
+    if closed.keys() - resolutions.keys():
+        raise Stop("closed unmerged automation PR requires reviewed acknowledgement")
+
+
 def existing(source):
     refs = api("git/matching-refs/heads/automation/update-skills")
     exact = [r for r in refs if r["ref"] == f"refs/heads/{BRANCH}"]
     history = prs()
     opened = [p for p in history if p["state"] == "open"]
-    # A closed unmerged PR is a human stop signal, not an invitation to recreate.
-    if any(not p.get("merged_at") and p["state"] == "closed" for p in history):
-        raise Stop("closed unmerged automation PR requires human handling")
+    # Acknowledgement releases historical holds only. It never authorizes
+    # modifying a surviving held, unknown, or human-edited branch.
+    check_closed_holds(history, load_resolutions())
     if not exact:
         if opened:
             raise Stop("PR exists without branch")

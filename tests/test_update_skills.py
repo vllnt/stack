@@ -104,7 +104,8 @@ class GitTests(unittest.TestCase):
                 return b"" if "fetch" in args else original_git(*args, **kwargs)
             def remote(path, *args):
                 return [{"ref": f"refs/heads/{u.BRANCH}", "object": {"sha": head}}] if path.startswith("git/") else pr(head)
-            with patch.object(u, "git", side_effect=local_git), patch.object(u, "api", side_effect=remote), patch.object(u, "prs", return_value=[pr(head)]):
+            acknowledged = dict(pr(), number=7, state="closed", merged_at=None)
+            with patch.object(u, "git", side_effect=local_git), patch.object(u, "api", side_effect=remote), patch.object(u, "prs", return_value=[pr(head), acknowledged]), patch.object(u, "load_resolutions", return_value={7: A}):
                 self.assertEqual(u.existing(repo), (head, pr(head)))
                 with patch.object(u, "candidate", return_value=B), self.assertRaises(u.Stop):
                     u.existing(repo)
@@ -233,6 +234,60 @@ class BoundaryTests(unittest.TestCase):
                     u.main()
                 remote.assert_not_called()
                 self.assertFalse(any("push" in c.args for c in commands.call_args_list))
+
+    def test_closed_hold_exact_reviewed_recovery(self):
+        closed = dict(pr(), state="closed", merged_at=None)
+        # Deletion alone cannot reset a human hold.
+        with patch.object(u, "api", return_value=[]), patch.object(u, "prs", return_value=[closed]), patch.object(u, "load_resolutions", return_value={}):
+            with self.assertRaisesRegex(u.Stop, "reviewed acknowledgement"):
+                u.existing(Path("unused"))
+        # Reviewed exact identity + separately deleted branch permits a fresh
+        # candidate; the acknowledgement never deletes or overwrites a branch.
+        with patch.object(u, "api", return_value=[]), patch.object(u, "prs", return_value=[closed]), patch.object(u, "load_resolutions", return_value={1: A}):
+            self.assertEqual(u.existing(Path("unused")), (None, None))
+        for acknowledgement in ({1: B}, {2: A}):
+            with self.assertRaisesRegex(u.Stop, "does not match"):
+                u.check_closed_holds([closed], acknowledgement)
+        other = dict(closed, number=2)
+        with self.assertRaisesRegex(u.Stop, "reviewed acknowledgement"):
+            u.check_closed_holds([closed, other], {1: A})
+        # Even acknowledged closed branches are not adopted as writable state.
+        with patch.object(u, "api", return_value=[{"ref": f"refs/heads/{u.BRANCH}", "object": {"sha": A}}]), patch.object(u, "prs", return_value=[closed]), patch.object(u, "load_resolutions", return_value={1: A}):
+            with self.assertRaisesRegex(u.Stop, "unknown/orphaned"):
+                u.existing(Path("unused"))
+
+    def test_acknowledged_history_allows_later_ordinary_update(self):
+        head = "d" * 40
+        environment = {"GH_TOKEN": "synthetic", "GITHUB_REPOSITORY": u.REPO,
+                       "GITHUB_REF": "refs/heads/main", "GITHUB_EVENT_NAME": "workflow_dispatch"}
+        closed = dict(pr(), state="closed", merged_at=None)
+        def git(*args, **kwargs):
+            if args[0] == "rev-parse":
+                return (B if "cwd" in kwargs else A).encode()
+            return head.encode() if args[0] == "commit-tree" else b""
+        def remote(path, method="GET", body=None):
+            return [] if path.startswith("git/matching-refs/") else pr(head)
+        with patch.dict(os.environ, environment), patch.object(u, "git", side_effect=git) as commands, patch.object(u, "run", return_value=b""), patch.object(u, "base_head", return_value=A), patch.object(u, "upstream", return_value=B), patch.object(u, "protection"), patch.object(u, "prs", return_value=[closed]), patch.object(u, "load_resolutions", return_value={1: A}), patch.object(u, "lock_at", return_value={"commit": A}), patch.object(u, "classify", return_value=[]), patch.object(u, "candidate", return_value="c" * 40), patch.object(u, "fence"), patch.object(u, "api", side_effect=remote) as api, patch.object(u, "merge") as merge:
+            u.main()
+            self.assertEqual(sum("push" in c.args for c in commands.call_args_list), 1)
+            self.assertEqual(sum(c.args[1:2] == ("POST",) for c in api.call_args_list), 1)
+            merge.assert_called_once_with(pr(head), head, A, B)
+
+    def test_resolution_schema_and_identity_fail_closed(self):
+        import json
+        invalid = ({}, [True], [{"pr": True, "head": A}], [{"pr": 0, "head": A}],
+                   [{"pr": 1, "head": "main"}], [{"pr": 1, "head": A, "all": True}],
+                   [{"pr": 1, "head": A}, {"pr": 1, "head": A}])
+        for entries in invalid:
+            with patch.object(Path, "read_text", return_value=json.dumps(entries)), self.assertRaises(u.Stop):
+                u.load_resolutions()
+        with patch.object(Path, "read_text", return_value=json.dumps([{"pr": 1, "head": A}])):
+            self.assertEqual(u.load_resolutions(), {1: A})
+        closed = dict(pr(), state="closed", merged_at=None)
+        for change in ({"state": "open"}, {"merged_at": "synthetic-date"}, {"base": {"ref": "other"}},
+                       {"head": {"sha": A, "ref": u.BRANCH, "repo": {"full_name": "other/stack"}}}):
+            with self.assertRaises(u.Stop):
+                u.check_closed_holds([dict(closed, **change)], {1: A})
 
     def test_api_error_visible(self):
         with patch.object(u, "run", side_effect=u.Stop("API unavailable")), self.assertRaises(u.Stop):
