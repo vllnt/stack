@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Record independently verified live source-push dispatch, automatic protected update/merge, post-merge no-op, and sensitive-change hold receipts; retain explicit host-runtime and scheduled-timer coverage limits.
+
 - Update packaged skills from `ffb5025dfa9f25fab868a4f12f9fb661ac7bfb87` to `14b8ad3dbba8ea820478d3ea2d379c2863de56d9` (0.1.0-dev.4).
 
 - Update packaged skills from `baa90d516fe19e55128e6df8691bb619e1d4f822` to `ffb5025dfa9f25fab868a4f12f9fb661ac7bfb87` (0.1.0-dev.3).
