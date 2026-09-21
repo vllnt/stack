@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Update packaged skills from `baa90d516fe19e55128e6df8691bb619e1d4f822` to `ffb5025dfa9f25fab868a4f12f9fb661ac7bfb87` (0.1.0-dev.3).
+
 - Wait within the existing bounded CI loop for a known previous PR head to propagate after a leased update; retain immediate stops for manual holds and unexpected PR/branch identities, with no repeated writes.
 
 - Fix generated update-PR help text accidentally containing the manual-hold marker; exercise the actual posted body against the unchanged hold guard, preserving intentional operator holds.
