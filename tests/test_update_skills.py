@@ -179,6 +179,45 @@ class BoundaryTests(unittest.TestCase):
                         u.merge(pr(), A, B, B)
                 self.assertEqual(sum(c.args[1:2] == ("PUT",) for c in remote.call_args_list), 1)
 
+    def test_known_previous_head_waits_for_propagation_before_checks_and_merge(self):
+        for branch in (A, B):
+            reads = iter([pr(A), pr(B), pr(B)])
+            def remote(path, method="GET", body=None):
+                if method == "PUT":
+                    self.assertEqual(body["sha"], B)
+                    return {"merged": True}
+                if path.startswith("git/ref/"):
+                    return {"object": {"sha": branch}}
+                return next(reads)
+            with patch.object(u, "api", side_effect=remote) as api, patch.object(u, "fence"), patch.object(u, "protection"), patch.object(u, "checks_pass", return_value=True) as checks, patch.object(u.time, "sleep") as sleep:
+                u.merge(pr(A), B, A, B, previous_head=A)
+                self.assertEqual(checks.call_count, 1)
+                sleep.assert_called_once_with(15)
+                self.assertEqual(sum(c.args[1:2] == ("PUT",) for c in api.call_args_list), 1)
+
+    def test_propagation_never_ignores_holds_or_unexpected_heads(self):
+        for current, previous, branch in ((pr(A), None, B), (pr("c" * 40), A, B),
+                                         (dict(pr(A), body="MANUAL HOLD"), A, B),
+                                         (dict(pr(A), labels=[{"name": "manual-review"}]), A, B),
+                                         (dict(pr(A), draft=True), A, B), (pr(A), A, "c" * 40)):
+            def remote(path, method="GET", body=None):
+                self.assertEqual(method, "GET")
+                return {"object": {"sha": branch}} if path.startswith("git/ref/") else current
+            with patch.object(u, "api", side_effect=remote), patch.object(u, "fence"), patch.object(u, "checks_pass") as checks, patch.object(u.time, "sleep") as sleep, self.assertRaises(u.Stop):
+                u.merge(pr(A), B, A, B, previous_head=previous)
+            checks.assert_not_called()
+            sleep.assert_not_called()
+
+    def test_propagation_timeout_never_checks_or_merges(self):
+        def remote(path, method="GET", body=None):
+            self.assertEqual(method, "GET")
+            return {"object": {"sha": B}} if path.startswith("git/ref/") else pr(A)
+        with patch.object(u, "api", side_effect=remote) as api, patch.object(u, "fence"), patch.object(u, "checks_pass") as checks, patch.object(u.time, "sleep") as sleep, self.assertRaises(u.Stop):
+            u.merge(pr(A), B, A, B, previous_head=A)
+        self.assertEqual(api.call_count, 40)
+        self.assertEqual(sleep.call_count, 19)
+        checks.assert_not_called()
+
     def test_bounded_missing_ci_never_merges(self):
         with patch.object(u, "api", return_value=pr()) as remote, patch.object(u, "fence"), patch.object(u, "checks_pass", return_value=False), patch.object(u.time, "sleep"), self.assertRaises(u.Stop):
             u.merge(pr(), A, B, B)
@@ -194,23 +233,24 @@ class BoundaryTests(unittest.TestCase):
         environment = {"GH_TOKEN": "synthetic", "GITHUB_TOKEN": "synthetic-builtin", "GITHUB_REPOSITORY": u.REPO,
                        "GITHUB_REF": "refs/heads/main", "GITHUB_EVENT_NAME": "workflow_dispatch"}
         tree, head = "c" * 40, "d" * 40
-        for previous in (None, head):
+        for previous in (None, head, "e" * 40):
             def git(*args, **kwargs):
                 if args[0] == "status":
                     return b""
                 if args[0] == "rev-parse":
-                    return (B if "cwd" in kwargs else tree if args[1].endswith("^{tree}") else A).encode()
+                    return (B if "cwd" in kwargs else (tree if previous == head else "f" * 40) if args[1].endswith("^{tree}") else A).encode()
                 if args[0] == "commit-tree":
                     return head.encode()
                 return b""
-            existing_pr = pr(head) if previous else None
+            existing_pr = pr(previous) if previous else None
             with patch.dict(os.environ, environment), patch.object(u, "git", side_effect=git) as commands, patch.object(u, "run", return_value=b"") as processes, patch.object(u, "base_head", return_value=A), patch.object(u, "upstream", return_value=B), patch.object(u, "protection"), patch.object(u, "existing", return_value=(previous, existing_pr)), patch.object(u, "lock_at", return_value={"commit": A}), patch.object(u, "classify", return_value=[]), patch.object(u, "candidate", return_value=tree), patch.object(u, "fence"), patch.object(u, "api", return_value=pr(head)) as remote, patch.object(u, "merge") as merge:
                 u.main()
-                merge.assert_called_once_with(pr(head), head, A, B)
+                merge.assert_called_once_with(existing_pr or pr(head), head, A, B,
+                                              previous_head=previous if previous != head else None)
                 pushes = [c for c in commands.call_args_list if "push" in c.args]
-                self.assertEqual(len(pushes), 0 if previous else 1)
+                self.assertEqual(len(pushes), 0 if previous == head else 1)
                 if pushes:
-                    self.assertIn(f"--force-with-lease=refs/heads/{u.BRANCH}:", pushes[0].args)
+                    self.assertIn(f"--force-with-lease=refs/heads/{u.BRANCH}:{previous or ''}", pushes[0].args)
                 self.assertEqual(remote.call_count, 0 if previous else 1)
                 if previous is None:
                     # Use the actual POST body, not the empty-body API fixture:
@@ -277,7 +317,7 @@ class BoundaryTests(unittest.TestCase):
             u.main()
             self.assertEqual(sum("push" in c.args for c in commands.call_args_list), 1)
             self.assertEqual(sum(c.args[1:2] == ("POST",) for c in api.call_args_list), 1)
-            merge.assert_called_once_with(pr(head), head, A, B)
+            merge.assert_called_once_with(pr(head), head, A, B, previous_head=None)
 
     def test_resolution_schema_and_identity_fail_closed(self):
         import json
