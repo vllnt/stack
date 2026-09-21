@@ -265,14 +265,23 @@ def checks_pass(head):
     return bool(checks) and all(c.get("head_sha") == head and c.get("status") == "completed" and c.get("conclusion") == "success" for c in checks)
 
 
-def merge(pr, head, base, pin):
+def merge(pr, head, base, pin, previous_head=None):
     for attempt in range(20):
         fence(base, pin)
         current = api(f"pulls/{pr['number']}")
-        verify_pr(current, head)
+        observed = sha(current["head"]["sha"])
+        # Holds and identity checks apply even while GitHub propagates our push.
+        verify_pr(current, observed)
         if current.get("state") != "open":
             raise Stop("PR no longer open")
-        if checks_pass(head):
+        if observed != head:
+            if observed != previous_head:
+                raise Stop("unexpected PR head; leave untouched")
+            branch = sha(api(f"git/ref/heads/{BRANCH}")["object"]["sha"])
+            if branch not in {head, previous_head}:
+                raise Stop("unexpected branch head during propagation; leave untouched")
+            print(f"Awaiting known PR head propagation from {previous_head} to {head}")
+        elif checks_pass(head):
             protection()
             fence(base, pin)
             verify_pr(api(f"pulls/{pr['number']}"), head)
@@ -347,7 +356,7 @@ def main():
         if pr is None:
             pr = api("pulls", "POST", {"title": "Update packaged Vstack skills", "head": BRANCH, "base": "main",
                  "body": f"Generated from trusted main `{base}` and upstream `{pin}`.\n\nAdd the `manual-review` label to stop automation.\n\n{MARKER}"})
-        merge(pr, head, base, pin)
+        merge(pr, head, base, pin, previous_head=previous if head != previous else None)
 
 
 if __name__ == "__main__":
