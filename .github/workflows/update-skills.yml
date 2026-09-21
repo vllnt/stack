@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: read
+  checks: read
 
 concurrency:
   group: automatic-skills-update
@@ -28,4 +29,5 @@ jobs:
       - name: Resolve, classify, regenerate, validate, and normally merge
         env:
           GH_TOKEN: ${{ secrets.STACK_UPDATE_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: python3 scripts/update_skills.py

@@ -41,11 +41,17 @@ def destination_git(*args):
     return git("-c", "credential.helper=", "-c", "credential.helper=!gh auth git-credential", *args)
 
 
-def api(path, method="GET", body=None):
+def api(path, method="GET", body=None, token_env=None):
     args = ["gh", "api", f"repos/{REPO}/{path}", "--method", method]
     if body is not None:
         args += ["--input", "-"]
-    return json.loads(run(*args, data=json.dumps(body).encode() if body is not None else None))
+    env = None
+    if token_env is not None:
+        token = os.environ.get(token_env)
+        if not token:
+            raise Stop(f"{token_env} is required for the scoped API operation")
+        env = dict(os.environ, GH_TOKEN=token)
+    return json.loads(run(*args, data=json.dumps(body).encode() if body is not None else None, env=env))
 
 
 def sha(value):
@@ -250,7 +256,9 @@ def fence(base, pin):
 
 
 def checks_pass(head):
-    value = api(f"commits/{head}/check-runs?per_page=100")
+    # Checks read is provided by the workflow's short-lived installation token,
+    # not requested from the operator's fine-grained personal access token.
+    value = api(f"commits/{head}/check-runs?per_page=100", token_env="GITHUB_TOKEN")
     if value.get("total_count", 101) > 100:
         raise Stop("check inventory exceeds bound")
     checks = [c for c in value.get("check_runs", []) if c.get("name") == "validate" and (c.get("app") or {}).get("id") == 15368]

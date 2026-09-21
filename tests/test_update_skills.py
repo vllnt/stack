@@ -191,7 +191,7 @@ class BoundaryTests(unittest.TestCase):
                 u.existing(Path("unused"))
 
     def test_main_publish_and_rerun_orchestration(self):
-        environment = {"GH_TOKEN": "synthetic", "GITHUB_REPOSITORY": u.REPO,
+        environment = {"GH_TOKEN": "synthetic", "GITHUB_TOKEN": "synthetic-builtin", "GITHUB_REPOSITORY": u.REPO,
                        "GITHUB_REF": "refs/heads/main", "GITHUB_EVENT_NAME": "workflow_dispatch"}
         tree, head = "c" * 40, "d" * 40
         for previous in (None, head):
@@ -215,6 +215,7 @@ class BoundaryTests(unittest.TestCase):
                 self.assertEqual(processes.call_count, 2)
                 for process in processes.call_args_list:
                     self.assertNotIn("GH_TOKEN", process.kwargs["env"])
+                    self.assertNotIn("GITHUB_TOKEN", process.kwargs["env"])
 
     def test_main_noop_and_sensitive_never_write(self):
         environment = {"GH_TOKEN": "synthetic", "GITHUB_REPOSITORY": u.REPO,
@@ -288,6 +289,30 @@ class BoundaryTests(unittest.TestCase):
                        {"head": {"sha": A, "ref": u.BRANCH, "repo": {"full_name": "other/stack"}}}):
             with self.assertRaises(u.Stop):
                 u.check_closed_holds([dict(closed, **change)], {1: A})
+
+    def test_checks_use_only_builtin_token_and_missing_token_has_no_fallback(self):
+        check = {"name": "validate", "app": {"id": 15368}, "head_sha": A,
+                 "status": "completed", "conclusion": "success"}
+        response = u.sync.encoded({"total_count": 1, "check_runs": [check]})
+        with patch.dict(os.environ, {"GH_TOKEN": "synthetic-personal", "GITHUB_TOKEN": "synthetic-builtin"}, clear=True):
+            with patch.object(u, "run", return_value=response) as remote:
+                self.assertTrue(u.checks_pass(A))
+                self.assertEqual(remote.call_args.kwargs["env"]["GH_TOKEN"], "synthetic-builtin")
+                self.assertIn(f"repos/{u.REPO}/commits/{A}/check-runs?per_page=100", remote.call_args.args)
+            with patch.object(u, "run", return_value=b"{}") as remote:
+                u.api("pulls", "POST", {})
+                self.assertIsNone(remote.call_args.kwargs["env"])
+        with patch.dict(os.environ, {"GH_TOKEN": "synthetic-personal"}, clear=True):
+            with patch.object(u, "run") as remote, self.assertRaisesRegex(u.Stop, "GITHUB_TOKEN is required"):
+                u.checks_pass(A)
+            remote.assert_not_called()
+
+    def test_workflow_grants_builtin_check_read(self):
+        workflow = (Path(__file__).resolve().parents[1] / ".github/workflows/update-skills.yml").read_text()
+        self.assertIn("  checks: read", workflow)
+        self.assertIn("GITHUB_TOKEN: ${{ github.token }}", workflow)
+        self.assertIn("GH_TOKEN: ${{ secrets.STACK_UPDATE_TOKEN }}", workflow)
+        self.assertNotIn("checks: write", workflow)
 
     def test_api_error_visible(self):
         with patch.object(u, "run", side_effect=u.Stop("API unavailable")), self.assertRaises(u.Stop):
