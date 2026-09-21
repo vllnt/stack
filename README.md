@@ -103,7 +103,30 @@ The generator accepts only regular archive files/directories, validates skill id
 
 For a bad local update, disable the plugin and test a known-good distribution commit before reinstalling. Never promise marketplace rollback until the selected host supports and verifies it. To add your own host-only agents or integrations later, define their source owner and tests first; don't place handwritten files inside an output directory that sync replaces.
 
+## Automatic source updates
+
+`.github/workflows/update-skills.yml` handles the fixed `skills-updated` repository dispatch, a daily schedule (06:17 UTC), and manual runs on `main`. It ignores dispatch payloads and independently resolves public `vllnt/skills` main. The dedicated `STACK_UPDATE_TOKEN` secret must be a selected-repository credential for **only `vllnt/stack`**, with Contents and Pull requests write access, plus **Administration read** for GitHub's [branch-protection endpoint](https://docs.github.com/en/rest/branches/branch-protection#get-branch-protection). Do not look for a Checks permission in the fine-grained personal-token UI. The workflow grants its automatically supplied, short-lived `GITHUB_TOKEN` **checks: read** and uses it only for [check-run inspection](https://docs.github.com/en/rest/checks/runs#list-check-runs-for-a-git-reference). PR creation and merging still use the dedicated token so normal PR CI is triggered. Credential authorization/setup remains with the operator. Do not substitute a personal broad token or `RELEASE_PAT`. Missing credentials fail closed. Checkout credentials are not persisted; candidate tests receive neither token. Missing built-in check credentials fail closed without falling back to the personal token.
+
+`scripts/update_skills.py` compares complete Git objects and requires the lock to be an ancestor. Only non-executable Markdown under `workflows/` (excluding instruction files and hidden paths) and root README, changelog, and roadmap changes are ordinary. Every other path, including mandatory principles, license, code, configuration, and unknown types, stops with **MANUAL HOLD**, without publishing a candidate. A human reviews and updates sensitive changes through a separate PR.
+
+Ordinary changes deterministically advance numeric `-dev.N`, or the patch of a stable version, regenerate all packages, and update the changelog. No pin change means no bump. The fixed `automation/update-skills` branch is published with an exact lease after isolated candidate tests. Existing candidates must exactly match reconstruction from their main-ancestor parent, pin, version, and changelog; human edits, forks, orphaned branches, draft PRs, `manual-review` labels, `MANUAL HOLD` in PR bodies, and closed unmerged automation PRs stop automation. These holds are never cleared by a newer upstream update. Closing an unmerged automation PR or deleting its branch alone intentionally keeps the stop signal.
+
+To retire a closed, unmerged automation PR after human review:
+
+1. Inspect its changes and resolve any desired sensitive updates through a separate human PR. Record its exact PR number and full head SHA from GitHub.
+2. Preserve any needed work, then have a human delete the held `automation/update-skills` branch after confirming its current head. Automation will not delete or adopt that branch on the strength of an acknowledgement.
+3. In a separately reviewed PR to `main`, append `{"pr": 123, "head": "<exact 40-character lowercase SHA>"}` to `.github/skills-update-resolutions.json` (an initially empty JSON array). Use real inspected identities, not the example. This acknowledges only that specific closed, unmerged PR; retain earlier valid entries. The updater never writes this file, and dispatch/manual inputs cannot supply a reset.
+4. Merge the acknowledgement through normal review and run the updater from current `main`. Every unmerged closed automation PR needs its own exact acknowledgement. Missing/mismatched identities, another held PR, or any surviving unknown/human-edited branch still stop the run. If an acknowledged PR is later reopened or merged, remove its now-invalid entry through another reviewed main PR.
+
+An existing ordinary open PR still requires full deterministic reconstruction before it can be updated; historical acknowledgements do not relax that proof or any live manual hold.
+
+Before publication and merge, source and destination heads are rechecked. Merge requires the reviewed main protection contract (strict `validate` from GitHub Actions app 15368, administrators enforced, zero required approving reviews, no force pushes/deletions), observed successful checks at the exact candidate head, and a normal squash-merge API call fenced by that head. No admin bypass, direct main push, protection change, release, or marketplace publication occurs. CI waiting is bounded to about five minutes; missing, failed, skipped, or cancelled evidence leaves the PR open and fails the run. API errors and uncertain writes fail visibly rather than blindly retrying. An orphaned branch after an uncertain PR creation needs human inspection. Concurrent runs serialize without cancellation.
+
+There is no atomic GitHub API transaction covering upstream refs, destination refs, and PR metadata. Immediate rechecks plus branch leases, merge head fences, and strict required checks narrow those races; a last-instant source update is handled on the next run. Branch protection remains the merge authority.
+
 ## Status and evidence
+
+The updater has offline Git-fixture and mocked API regression coverage; credential setup, hosted updater CI, a real cross-repository dispatch/update PR/merge, and hosted gated/no-op cases remain pending. Local simulation is not proof of operational activation.
 
 Initialization provides generated packages and structural/regression tests. **Actual Claude Code, Codex, and Cursor installation, automatic skill selection, and startup/context-loss behavior remain unverified.** No public marketplace submission, release, host installation, or automatic Claude/Codex principle loading has been performed.
 
