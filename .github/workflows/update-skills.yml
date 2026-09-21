@@ -1,0 +1,31 @@
+name: Update packaged skills
+
+on:
+  repository_dispatch:
+    types: [skills-updated]
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: automatic-skills-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    if: github.repository == 'vllnt/stack' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Resolve, classify, regenerate, validate, and normally merge
+        env:
+          GH_TOKEN: ${{ secrets.STACK_UPDATE_TOKEN }}
+        run: python3 scripts/update_skills.py
