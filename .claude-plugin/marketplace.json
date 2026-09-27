@@ -1,5 +1,5 @@
 {
-  "description": "Vstack portable workflows and engineering principles for Claude Code.",
+  "description": "Evidence-led engineering workflows to plan, build, review, and ship software, with shared thinking, orchestration, and collaboration principles.",
   "name": "vllnt-stack",
   "owner": {
     "name": "vllnt"

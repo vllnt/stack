@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.1.0-canary.2
+
+- Add a Claude plugin icon owned by this repository (`assets/claude-icon.svg`) and a clearer shared plugin and Claude marketplace description, both through the generator.
+
 - Record Claude Code installation of `0.1.0-canary.1` from the public GitHub marketplace source; skill invocation behavior remains unverified.
 
 ## 0.1.0-canary.1
