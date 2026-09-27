@@ -66,6 +66,7 @@ class BuildTests(unittest.TestCase):
             ("claude", "plugins/claude/.claude-plugin/plugin.json"), ("codex", "plugins/codex/plugin.json"),
             ("cursor", "plugins/cursor/.cursor-plugin/plugin.json"))}
         self.assertEqual(manifests["claude"]["repository"], "https://github.com/vllnt/stack")
+        self.assertEqual(manifests["claude"]["homepage"], "https://vllnt.com")
         self.assertNotIn("repository", manifests["codex"])
         self.assertNotIn("repository", manifests["cursor"])
 

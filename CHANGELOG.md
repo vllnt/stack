@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.1.0-canary.3
+
+- Describe Vstack as part of the vllnt universe and set the Claude plugin homepage to https://vllnt.com.
+
 ## 0.1.0-canary.2
 
 - Add a Claude plugin icon owned by this repository (`assets/claude-icon.svg`) and a clearer shared plugin and Claude marketplace description, both through the generator.
