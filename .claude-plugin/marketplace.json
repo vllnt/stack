@@ -1,6 +1,6 @@
 {
   "description": "Evidence-led engineering workflows to plan, build, review, and ship software with AI agents. Part of the vllnt universe: open, sovereign tools for freedom by design (vllnt.com).",
-  "name": "vllnt-stack",
+  "name": "vllnt",
   "owner": {
     "name": "vllnt"
   },

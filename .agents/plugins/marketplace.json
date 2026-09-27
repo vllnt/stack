@@ -2,7 +2,7 @@
   "interface": {
     "displayName": "Vstack"
   },
-  "name": "vllnt-stack",
+  "name": "vllnt",
   "plugins": [
     {
       "category": "Productivity",

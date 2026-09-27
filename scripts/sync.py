@@ -24,6 +24,7 @@ ROOT = Path(__file__).resolve().parents[1]
 UPSTREAM = "https://github.com/vllnt/skills.git"
 REPOSITORY = "https://github.com/vllnt/stack"
 HOMEPAGE = "https://vllnt.com"
+MARKETPLACE = "vllnt"
 DESCRIPTION = ("Evidence-led engineering workflows to plan, build, review, and ship software with AI agents. "
                "Part of the vllnt universe: open, sovereign tools for freedom by design (vllnt.com).")
 CLAUDE_ICON = ROOT / "assets" / "vllnt-logo.png"
@@ -257,13 +258,13 @@ def build(files: dict[str, bytes], lock: dict, version: str) -> dict[str, bytes]
             path: hashlib.sha256(content).hexdigest() for path, content in sorted(package.items())}})
         output.update({f"plugins/{host}/{path}": content for path, content in package.items()})
     for host in ("claude", "cursor"):
-        catalog = {"name": "vllnt-stack", "owner": {"name": "vllnt"},
+        catalog = {"name": MARKETPLACE, "owner": {"name": "vllnt"},
                    "plugins": [{"name": "vstack", "source": f"./plugins/{host}"}]}
         if host == "claude":
             catalog["description"] = DESCRIPTION
         output[f".{host}-plugin/marketplace.json"] = encoded(catalog)
     output[".agents/plugins/marketplace.json"] = encoded({
-        "name": "vllnt-stack", "interface": {"displayName": "Vstack"},
+        "name": MARKETPLACE, "interface": {"displayName": "Vstack"},
         "plugins": [{"name": "vstack", "source": {"source": "local", "path": "./plugins/codex"},
                      "policy": {"installation": "AVAILABLE", "authentication": "ON_INSTALL"},
                      "category": "Productivity"}]})

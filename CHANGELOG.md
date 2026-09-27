@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.1.0-canary.5
+
+- Rename the marketplace from `vllnt-stack` to `vllnt` for all hosts, so installs read `vstack@vllnt`. Existing installs must remove the `vllnt-stack` marketplace and add `vllnt/stack` again.
+
 ## 0.1.0-canary.4
 
 - Use the vllnt logo as the Claude plugin icon: `assets/vllnt-logo.png` is wrapped by the generator into `.claude-plugin/icon.svg`.
