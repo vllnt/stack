@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import gzip
 import hashlib
 import io
@@ -12,6 +13,7 @@ from pathlib import Path, PurePosixPath
 import re
 import selectors
 import shutil
+import struct
 import subprocess
 import tarfile
 import tempfile
@@ -24,7 +26,7 @@ REPOSITORY = "https://github.com/vllnt/stack"
 HOMEPAGE = "https://vllnt.com"
 DESCRIPTION = ("Evidence-led engineering workflows to plan, build, review, and ship software with AI agents. "
                "Part of the vllnt universe: open, sovereign tools for freedom by design (vllnt.com).")
-CLAUDE_ICON = ROOT / "assets" / "claude-icon.svg"
+CLAUDE_ICON = ROOT / "assets" / "vllnt-logo.png"
 HOSTS = ("claude", "codex", "cursor")
 PRINCIPLES = tuple(f"vllnt-{name}-principles" for name in ("thinking", "orchestration", "collaboration"))
 MAX_ARCHIVE = 32 * 1024 * 1024
@@ -217,6 +219,19 @@ def payload(files: dict[str, bytes]) -> tuple[dict[str, bytes], bytes]:
     return skills, rule.encode()
 
 
+def icon_svg(png: bytes) -> bytes:
+    """Wrap a square PNG in the SVG file Claude's plugin directory looks for."""
+    if png[:8] != b"\x89PNG\r\n\x1a\n":
+        raise Invalid("Claude icon must be a PNG")
+    width, height = struct.unpack(">II", png[16:24])
+    if width != height or width < 128:
+        raise Invalid("Claude icon must be square and at least 128px")
+    data = base64.b64encode(png).decode()
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
+            f'viewBox="0 0 {width} {height}"><image width="{width}" height="{height}" '
+            f'href="data:image/png;base64,{data}"/></svg>\n').encode()
+
+
 def build(files: dict[str, bytes], lock: dict, version: str) -> dict[str, bytes]:
     if not re.fullmatch(r"\d+\.\d+\.\d+(?:-[a-zA-Z0-9.-]+)?", version):
         raise Invalid("VERSION must contain a semantic version")
@@ -235,7 +250,7 @@ def build(files: dict[str, bytes], lock: dict, version: str) -> dict[str, bytes]
                          "cursor": ".cursor-plugin/plugin.json"}[host]
         package = {**skills, "LICENSE": files["LICENSE"], manifest_path: encoded(manifest)}
         if host == "claude":
-            package[".claude-plugin/icon.svg"] = CLAUDE_ICON.read_bytes()
+            package[".claude-plugin/icon.svg"] = icon_svg(CLAUDE_ICON.read_bytes())
         if host == "cursor":
             package["rules/vstack-principles.mdc"] = rule
         package["SOURCE.json"] = encoded({"upstream": lock, "files": {
