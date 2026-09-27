@@ -4,7 +4,7 @@ One distribution repository for Vstack plugins for **Claude Code, Codex, and Cur
 
 ## Install in Claude Code
 
-The Claude Code plugin is in canary (`0.1.0-canary.N`): installation from GitHub is verified, while skill behavior is still being accepted. Codex and Cursor follow. Stable `0.1.0` is released once all hosts pass.
+The Claude Code plugin is in canary (prerelease versions): installation from GitHub is verified, while skill behavior is still being accepted. Codex and Cursor follow. A stable release follows once all hosts pass. The current version is in [`VERSION`](VERSION); changes are in [`CHANGELOG.md`](CHANGELOG.md).
 
 ```text
 /plugin marketplace add vllnt/stack
@@ -138,7 +138,7 @@ There is no atomic GitHub API transaction covering upstream refs, destination re
 
 ## Status and evidence
 
-Automatic repository synchronization was independently verified on 2026-09-21. A fresh source push created and automatically merged a protected update PR without operator intervention. The verification candidate was source `14b8ad3dbba8ea820478d3ea2d379c2863de56d9`, distribution `0.1.0-dev.4`, merged at `3a71175c31347988861ac073417257ef1da38416`.
+Automatic repository synchronization was independently verified on 2026-09-21. A fresh source push created and automatically merged a protected update PR without operator intervention. The verification candidate was source `14b8ad3dbba8ea820478d3ea2d379c2863de56d9`, merged at `3a71175c31347988861ac073417257ef1da38416`.
 
 | Case | Hosted evidence | Observed result |
 | --- | --- | --- |
@@ -149,9 +149,9 @@ Automatic repository synchronization was independently verified on 2026-09-21. A
 
 Live testing caught a generated-help false hold and post-push PR-head propagation timing; fixes were reviewed and merged through PRs #5 and #6, with 37 regression tests passing. The fresh PR #7 case required neither manual metadata repair nor manual merge. Daily fallback is configured; its timer was not waited for. Push delivery, manual resends, automatic merging, and manual no-op execution were observed.
 
-Claude Code 2.1.283 (2026-09-27): `claude plugin validate` passes for the catalog and plugin; a local-directory marketplace install into an isolated configuration installed `vstack@vllnt-stack` 0.1.0-canary.1 with all 22 skills, and a maintainer session with the local install listed every `vstack:*` skill. After `vllnt/stack` became public (merge `c3ad08c08fe460ed4f2e1a40630afe4001ddd23c`), an anonymous clone succeeded, and the CLI equivalents `claude plugin marketplace add vllnt/stack` plus `claude plugin install vstack@vllnt-stack` in a clean, credential-free configuration installed `0.1.0-canary.1` from the GitHub source; a headless session there listed exactly the 22 `vstack:*` skills. The same commands after merge `915a4d0d519d726f84185ec698b3ed3f4c925cb8` installed `0.1.0-canary.3` with its icon, updated description, and 22 skills. The in-chat `/plugin` forms were not run separately. Skill invocation behavior (including `plan-work` staying read-only), automatic skill selection, and the rest of the acceptance checklist remain unverified.
+Claude Code 2.1.283 (2026-09-27): `claude plugin validate` passes for the catalog and plugin; a local-directory marketplace install into an isolated configuration installed `vstack@vllnt-stack` with all 22 skills, and a maintainer session with the local install listed every `vstack:*` skill. After `vllnt/stack` became public (merge `c3ad08c08fe460ed4f2e1a40630afe4001ddd23c`), an anonymous clone succeeded, and the CLI equivalents `claude plugin marketplace add vllnt/stack` plus `claude plugin install vstack@vllnt-stack` in a clean, credential-free configuration installed the plugin from the GitHub source; a headless session there listed exactly the 22 `vstack:*` skills. The same commands after merge `915a4d0d519d726f84185ec698b3ed3f4c925cb8` installed it again with its icon, updated description, and 22 skills. The in-chat `/plugin` forms were not run separately. Skill invocation behavior (including `plan-work` staying read-only), automatic skill selection, and the rest of the acceptance checklist remain unverified.
 
-**Codex and Cursor installation, and startup/context-loss behavior in every host, remain unverified.** The repository is public and installable as a GitHub marketplace. A Claude plugin directory submission is in validation and is not listed yet. [`v0.1.0-canary.3`](https://github.com/vllnt/stack/releases/tag/v0.1.0-canary.3) is published as a GitHub prerelease; releases are created manually. No automatic Claude/Codex principle loading exists.
+**Codex and Cursor installation, and startup/context-loss behavior in every host, remain unverified.** The repository is public and installable as a GitHub marketplace. A Claude plugin directory submission is in validation and is not listed yet. Canary builds are published as [GitHub prereleases](https://github.com/vllnt/stack/releases); releases are created manually. No automatic Claude/Codex principle loading exists.
 
 Host format sources consulted during initialization:
 

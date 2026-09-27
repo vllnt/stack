@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Remove distribution version numbers from the README so routine version bumps need no README edits; `VERSION` and this changelog remain the version records.
+
 - Record the `v0.1.0-canary.3` GitHub prerelease.
 
 - Refresh README and AGENTS guidance: vllnt introduction, current canary status and install evidence, directory submission state, and asset ownership.
