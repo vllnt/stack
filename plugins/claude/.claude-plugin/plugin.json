@@ -3,7 +3,15 @@
     "name": "vllnt"
   },
   "description": "Vstack portable workflows and engineering principles.",
+  "homepage": "https://github.com/vllnt/stack",
+  "keywords": [
+    "workflows",
+    "engineering",
+    "principles",
+    "skills"
+  ],
   "license": "MIT",
   "name": "vstack",
-  "version": "0.1.0-dev.5"
+  "repository": "https://github.com/vllnt/stack",
+  "version": "0.1.0"
 }
