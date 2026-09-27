@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Remove the previous marketplace name from the README; the migration note stays in this changelog.
+
 ## 0.1.0-canary.5
 
 - Rename the marketplace from `vllnt-stack` to `vllnt` for all hosts, so installs read `vstack@vllnt`. Existing installs must remove the `vllnt-stack` marketplace and add `vllnt/stack` again.
