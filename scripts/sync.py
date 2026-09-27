@@ -21,6 +21,9 @@ import urllib.request
 ROOT = Path(__file__).resolve().parents[1]
 UPSTREAM = "https://github.com/vllnt/skills.git"
 REPOSITORY = "https://github.com/vllnt/stack"
+DESCRIPTION = ("Evidence-led engineering workflows to plan, build, review, and ship software, "
+               "with shared thinking, orchestration, and collaboration principles.")
+CLAUDE_ICON = ROOT / "assets" / "claude-icon.svg"
 HOSTS = ("claude", "codex", "cursor")
 PRINCIPLES = tuple(f"vllnt-{name}-principles" for name in ("thinking", "orchestration", "collaboration"))
 MAX_ARCHIVE = 32 * 1024 * 1024
@@ -220,7 +223,7 @@ def build(files: dict[str, bytes], lock: dict, version: str) -> dict[str, bytes]
     output = {}
     for host in HOSTS:
         manifest = {"name": "vstack", "version": version,
-                    "description": "Vstack portable workflows and engineering principles.",
+                    "description": DESCRIPTION,
                     "author": {"name": "vllnt"}, "license": "MIT"}
         if host == "claude":
             manifest.update({"homepage": REPOSITORY, "repository": REPOSITORY,
@@ -230,6 +233,8 @@ def build(files: dict[str, bytes], lock: dict, version: str) -> dict[str, bytes]
         manifest_path = {"claude": ".claude-plugin/plugin.json", "codex": "plugin.json",
                          "cursor": ".cursor-plugin/plugin.json"}[host]
         package = {**skills, "LICENSE": files["LICENSE"], manifest_path: encoded(manifest)}
+        if host == "claude":
+            package[".claude-plugin/icon.svg"] = CLAUDE_ICON.read_bytes()
         if host == "cursor":
             package["rules/vstack-principles.mdc"] = rule
         package["SOURCE.json"] = encoded({"upstream": lock, "files": {
@@ -239,7 +244,7 @@ def build(files: dict[str, bytes], lock: dict, version: str) -> dict[str, bytes]
         catalog = {"name": "vllnt-stack", "owner": {"name": "vllnt"},
                    "plugins": [{"name": "vstack", "source": f"./plugins/{host}"}]}
         if host == "claude":
-            catalog["description"] = "Vstack portable workflows and engineering principles for Claude Code."
+            catalog["description"] = DESCRIPTION
         output[f".{host}-plugin/marketplace.json"] = encoded(catalog)
     output[".agents/plugins/marketplace.json"] = encoded({
         "name": "vllnt-stack", "interface": {"displayName": "Vstack"},

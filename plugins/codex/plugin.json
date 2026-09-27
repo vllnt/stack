@@ -3,8 +3,8 @@
   "author": {
     "name": "vllnt"
   },
-  "description": "Vstack portable workflows and engineering principles.",
+  "description": "Evidence-led engineering workflows to plan, build, review, and ship software, with shared thinking, orchestration, and collaboration principles.",
   "license": "MIT",
   "name": "vstack",
-  "version": "0.1.0-canary.1"
+  "version": "0.1.0-canary.2"
 }

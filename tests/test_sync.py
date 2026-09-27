@@ -53,6 +53,7 @@ class BuildTests(unittest.TestCase):
             self.assertEqual(package["skills/test-work/SKILL.md"], files["workflows/test-work/SKILL.md"])
             self.assertEqual("rules/vstack-principles.mdc" in package, host == "cursor")
             self.assertEqual(package["LICENSE"], files["LICENSE"])
+            self.assertEqual(".claude-plugin/icon.svg" in package, host == "claude")
         claude = json.loads(first[".claude-plugin/marketplace.json"])
         codex = json.loads(first[".agents/plugins/marketplace.json"])
         cursor = json.loads(first[".cursor-plugin/marketplace.json"])

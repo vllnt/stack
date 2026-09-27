@@ -1,6 +1,7 @@
 {
   "files": {
-    ".claude-plugin/plugin.json": "029df1dbf5659bdedbc95b13a5c14c41957984dfee6b77b86e6b54cb742a2de1",
+    ".claude-plugin/icon.svg": "dc3b420724330eed1296c63c5c6d3290fa031d0eceb39180a2258f6992c76108",
+    ".claude-plugin/plugin.json": "0919a260d3a18cb7ff5af325773db6fe870ca9530707d40321c440e4405ee147",
     "LICENSE": "24ba061a4603738ddd5105ef4abc198eeded5ac7efce23b360561816f4dd6559",
     "skills/build-landing-page/README.md": "46a280eadac8962180cf3f0c42eb0e845a3b0156a644569182d932881e1d51f8",
     "skills/build-landing-page/SKILL.md": "b08e4963d6149f3647b28a0d9dccdc8793812abab95a1d081d93699e142de0f0",
