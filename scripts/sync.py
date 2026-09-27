@@ -21,8 +21,9 @@ import urllib.request
 ROOT = Path(__file__).resolve().parents[1]
 UPSTREAM = "https://github.com/vllnt/skills.git"
 REPOSITORY = "https://github.com/vllnt/stack"
-DESCRIPTION = ("Evidence-led engineering workflows to plan, build, review, and ship software, "
-               "with shared thinking, orchestration, and collaboration principles.")
+HOMEPAGE = "https://vllnt.com"
+DESCRIPTION = ("Evidence-led engineering workflows to plan, build, review, and ship software with AI agents. "
+               "Part of the vllnt universe: open, sovereign tools for freedom by design (vllnt.com).")
 CLAUDE_ICON = ROOT / "assets" / "claude-icon.svg"
 HOSTS = ("claude", "codex", "cursor")
 PRINCIPLES = tuple(f"vllnt-{name}-principles" for name in ("thinking", "orchestration", "collaboration"))
@@ -226,7 +227,7 @@ def build(files: dict[str, bytes], lock: dict, version: str) -> dict[str, bytes]
                     "description": DESCRIPTION,
                     "author": {"name": "vllnt"}, "license": "MIT"}
         if host == "claude":
-            manifest.update({"homepage": REPOSITORY, "repository": REPOSITORY,
+            manifest.update({"homepage": HOMEPAGE, "repository": REPOSITORY,
                              "keywords": ["workflows", "engineering", "principles", "skills"]})
         if host == "codex":
             manifest["$schema"] = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"

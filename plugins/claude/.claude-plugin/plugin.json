@@ -2,8 +2,8 @@
   "author": {
     "name": "vllnt"
   },
-  "description": "Evidence-led engineering workflows to plan, build, review, and ship software, with shared thinking, orchestration, and collaboration principles.",
-  "homepage": "https://github.com/vllnt/stack",
+  "description": "Evidence-led engineering workflows to plan, build, review, and ship software with AI agents. Part of the vllnt universe: open, sovereign tools for freedom by design (vllnt.com).",
+  "homepage": "https://vllnt.com",
   "keywords": [
     "workflows",
     "engineering",
@@ -13,5 +13,5 @@
   "license": "MIT",
   "name": "vstack",
   "repository": "https://github.com/vllnt/stack",
-  "version": "0.1.0-canary.2"
+  "version": "0.1.0-canary.3"
 }
