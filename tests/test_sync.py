@@ -59,6 +59,7 @@ class BuildTests(unittest.TestCase):
         claude = json.loads(first[".claude-plugin/marketplace.json"])
         codex = json.loads(first[".agents/plugins/marketplace.json"])
         cursor = json.loads(first[".cursor-plugin/marketplace.json"])
+        self.assertEqual({claude["name"], codex["name"], cursor["name"]}, {"vllnt"})
         self.assertEqual(claude["plugins"][0]["source"], "./plugins/claude")
         self.assertEqual(codex["plugins"][0]["source"]["path"], "./plugins/codex")
         self.assertEqual(cursor["plugins"][0]["source"], "./plugins/cursor")
