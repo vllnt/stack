@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.1.0-canary.4
+
+- Use the vllnt logo as the Claude plugin icon: `assets/vllnt-logo.png` is wrapped by the generator into `.claude-plugin/icon.svg`.
+
 - Remove distribution version numbers from the README so routine version bumps need no README edits; `VERSION` and this changelog remain the version records.
 
 - Record the `v0.1.0-canary.3` GitHub prerelease.

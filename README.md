@@ -22,7 +22,7 @@ Then start a new chat and invoke a namespaced skill such as `/vstack:plan-work`.
 | `upstream.lock.json` | Trusted upstream repository and immutable commit |
 | `VERSION` | Shared distribution version |
 | `scripts/sync.py` | Standard-library generator and read-only drift check |
-| `assets/claude-icon.svg` | Claude plugin icon, copied into the Claude package as `.claude-plugin/icon.svg` |
+| `assets/vllnt-logo.png` | vllnt logo; the generator wraps it as the Claude package's `.claude-plugin/icon.svg` |
 | `plugins/claude/` | Generated Claude Code native plugin |
 | `plugins/codex/` | Generated portable Agent Plugin for Codex |
 | `plugins/cursor/` | Generated Cursor native plugin and principles rule |

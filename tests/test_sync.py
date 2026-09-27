@@ -4,6 +4,7 @@ import importlib.util
 import io
 import json
 from pathlib import Path
+import struct
 import subprocess
 import tarfile
 import tempfile
@@ -54,6 +55,7 @@ class BuildTests(unittest.TestCase):
             self.assertEqual("rules/vstack-principles.mdc" in package, host == "cursor")
             self.assertEqual(package["LICENSE"], files["LICENSE"])
             self.assertEqual(".claude-plugin/icon.svg" in package, host == "claude")
+        self.assertIn(b"data:image/png;base64,", first["plugins/claude/.claude-plugin/icon.svg"])
         claude = json.loads(first[".claude-plugin/marketplace.json"])
         codex = json.loads(first[".agents/plugins/marketplace.json"])
         cursor = json.loads(first[".cursor-plugin/marketplace.json"])
@@ -69,6 +71,13 @@ class BuildTests(unittest.TestCase):
         self.assertEqual(manifests["claude"]["homepage"], "https://vllnt.com")
         self.assertNotIn("repository", manifests["codex"])
         self.assertNotIn("repository", manifests["cursor"])
+
+    def test_claude_icon_requires_square_png(self):
+        png = lambda w, h: b"\x89PNG\r\n\x1a\n" + b"\0\0\0\rIHDR" + struct.pack(">II", w, h)
+        self.assertIn(b'viewBox="0 0 256 256"', sync.icon_svg(png(256, 256)))
+        for bad in (png(256, 128), png(64, 64), b"<svg/>" + bytes(32)):
+            with self.assertRaises(sync.Invalid):
+                sync.icon_svg(bad)
 
     def test_added_and_removed_workflows(self):
         files = source()
