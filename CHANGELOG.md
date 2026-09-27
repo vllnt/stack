@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Record the `v0.1.0-canary.3` GitHub prerelease.
+
 - Refresh README and AGENTS guidance: vllnt introduction, current canary status and install evidence, directory submission state, and asset ownership.
 
 ## 0.1.0-canary.3
