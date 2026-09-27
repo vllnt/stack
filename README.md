@@ -4,6 +4,8 @@ One distribution repository for Vstack plugins for **Claude Code, Codex, and Cur
 
 ## Install in Claude Code
 
+The Claude Code plugin is in canary (`0.1.0-canary.N`) while installation from GitHub is verified; Codex and Cursor follow. Stable `0.1.0` is released once all hosts pass.
+
 ```text
 /plugin marketplace add vllnt/stack
 /plugin install vstack@vllnt-stack
@@ -118,7 +120,7 @@ For a bad local update, disable the plugin and test a known-good distribution co
 
 `scripts/update_skills.py` compares complete Git objects and requires the lock to be an ancestor. Only non-executable Markdown under `workflows/` (excluding instruction files and hidden paths) and root README, changelog, and roadmap changes are ordinary. Every other path, including mandatory principles, license, code, configuration, and unknown types, stops with **MANUAL HOLD**, without publishing a candidate. A human reviews and updates sensitive changes through a separate PR.
 
-Ordinary changes deterministically advance numeric `-dev.N`, or the patch of a stable version, regenerate all packages, and update the changelog. No pin change means no bump. The fixed `automation/update-skills` branch is published with an exact lease after isolated candidate tests. Existing candidates must exactly match reconstruction from their main-ancestor parent, pin, version, and changelog; human edits, forks, orphaned branches, draft PRs, `manual-review` labels, `MANUAL HOLD` in PR bodies, and closed unmerged automation PRs stop automation. These holds are never cleared by a newer upstream update. Closing an unmerged automation PR or deleting its branch alone intentionally keeps the stop signal.
+Ordinary changes deterministically advance numeric `-dev.N` or `-canary.N`, or the patch of a stable version, regenerate all packages, and update the changelog. No pin change means no bump. The fixed `automation/update-skills` branch is published with an exact lease after isolated candidate tests. Existing candidates must exactly match reconstruction from their main-ancestor parent, pin, version, and changelog; human edits, forks, orphaned branches, draft PRs, `manual-review` labels, `MANUAL HOLD` in PR bodies, and closed unmerged automation PRs stop automation. These holds are never cleared by a newer upstream update. Closing an unmerged automation PR or deleting its branch alone intentionally keeps the stop signal.
 
 To retire a closed, unmerged automation PR after human review:
 
@@ -146,7 +148,7 @@ Automatic repository synchronization was independently verified on 2026-09-21. A
 
 Live testing caught a generated-help false hold and post-push PR-head propagation timing; fixes were reviewed and merged through PRs #5 and #6, with 37 regression tests passing. The fresh PR #7 case required neither manual metadata repair nor manual merge. Daily fallback is configured; its timer was not waited for. Push delivery, manual resends, automatic merging, and manual no-op execution were observed.
 
-Claude Code 2.1.283 (2026-09-27): `claude plugin validate` passes for the catalog and plugin; a local-directory marketplace install into an isolated configuration installed `vstack@vllnt-stack` 0.1.0 with all 22 skills, and a maintainer session with the local install listed every `vstack:*` skill. Installation from the public GitHub source, automatic skill selection, and the README acceptance checklist remain unverified.
+Claude Code 2.1.283 (2026-09-27): `claude plugin validate` passes for the catalog and plugin; a local-directory marketplace install into an isolated configuration installed `vstack@vllnt-stack` 0.1.0-canary.1 with all 22 skills, and a maintainer session with the local install listed every `vstack:*` skill. Installation from the public GitHub source, automatic skill selection, and the README acceptance checklist remain unverified.
 
 **Codex and Cursor installation, and startup/context-loss behavior in every host, remain unverified.** No public marketplace submission, release tag, or automatic Claude/Codex principle loading has been performed.
 

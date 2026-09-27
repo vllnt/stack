@@ -117,7 +117,8 @@ class BoundaryTests(unittest.TestCase):
     def test_versions_and_sensitive_paths(self):
         self.assertEqual(u.bump("1.2.3"), "1.2.4")
         self.assertEqual(u.bump("0.1.0-dev.9"), "0.1.0-dev.10")
-        for version in ("1.2.3-rc.1", "01.2.3", "v1.2.3", "1.2"):
+        self.assertEqual(u.bump("0.1.0-canary.1"), "0.1.0-canary.2")
+        for version in ("1.2.3-rc.1", "0.1.0-canary", "01.2.3", "v1.2.3", "1.2"):
             with self.assertRaises(u.Stop):
                 u.bump(version)
         for path in ("mandatory/x/SKILL.md", "LICENSE", "AGENTS.md", "workflows/x/AGENTS.md",

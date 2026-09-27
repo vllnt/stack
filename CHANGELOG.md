@@ -2,9 +2,9 @@
 
 ## Unreleased
 
-## 0.1.0
+## 0.1.0-canary.1
 
-- Set the first stable distribution version.
+- Publish the first canary for Claude Code verification; stable `0.1.0` follows once Claude Code, Codex, and Cursor are verified. Automatic source updates advance `-canary.N`.
 
 - Add a Claude marketplace description and Claude plugin homepage, repository, and keywords through the generator; document public Claude Code installation and record isolated local install evidence.
 
