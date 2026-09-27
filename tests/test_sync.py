@@ -59,6 +59,14 @@ class BuildTests(unittest.TestCase):
         self.assertEqual(claude["plugins"][0]["source"], "./plugins/claude")
         self.assertEqual(codex["plugins"][0]["source"]["path"], "./plugins/codex")
         self.assertEqual(cursor["plugins"][0]["source"], "./plugins/cursor")
+        self.assertIn("description", claude)
+        self.assertNotIn("description", cursor)
+        manifests = {host: json.loads(first[path]) for host, path in (
+            ("claude", "plugins/claude/.claude-plugin/plugin.json"), ("codex", "plugins/codex/plugin.json"),
+            ("cursor", "plugins/cursor/.cursor-plugin/plugin.json"))}
+        self.assertEqual(manifests["claude"]["repository"], "https://github.com/vllnt/stack")
+        self.assertNotIn("repository", manifests["codex"])
+        self.assertNotIn("repository", manifests["cursor"])
 
     def test_added_and_removed_workflows(self):
         files = source()

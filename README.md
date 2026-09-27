@@ -2,6 +2,17 @@
 
 One distribution repository for Vstack plugins for **Claude Code, Codex, and Cursor**.
 
+## Install in Claude Code
+
+The Claude Code plugin is in canary (`0.1.0-canary.N`) while installation from GitHub is verified; Codex and Cursor follow. Stable `0.1.0` is released once all hosts pass.
+
+```text
+/plugin marketplace add vllnt/stack
+/plugin install vstack@vllnt-stack
+```
+
+Then start a new chat and invoke a namespaced skill such as `/vstack:plan-work`. Third-party marketplaces may not auto-update by default; enable auto-update for `vllnt-stack` in `/plugin`, or run `/plugin marketplace update vllnt-stack` to receive new versions.
+
 [`vllnt/skills`](https://github.com/vllnt/skills) owns the portable workflows and principles. This repository pins an upstream commit and builds complete, committed host packages. Installed users need no Python, Git submodule, build step, or runtime source download.
 
 ## Ownership and layout
@@ -9,7 +20,7 @@ One distribution repository for Vstack plugins for **Claude Code, Codex, and Cur
 | Path | Owner / purpose |
 | --- | --- |
 | `upstream.lock.json` | Trusted upstream repository and immutable commit |
-| `VERSION` | Shared distribution version; initially an unreleased development version |
+| `VERSION` | Shared distribution version |
 | `scripts/sync.py` | Standard-library generator and read-only drift check |
 | `plugins/claude/` | Generated Claude Code native plugin |
 | `plugins/codex/` | Generated portable Agent Plugin for Codex |
@@ -28,9 +39,9 @@ Cursor receives an `alwaysApply` rule generated from the three canonical princip
 
 The plugin does not install frameworks, activate the optional Vstack stack profile, replace consumer permissions, or install hooks, MCP servers, or custom agents. Guidance is not a security sandbox. Users may need separate tools and credentials for individual workflows, supplied by their consumer projects.
 
-## Local host testing (manual; not executed yet)
+## Local host testing
 
-These are development instructions based on the host documentation, not claims of tested runtime compatibility. Use a synthetic project and avoid overlapping standalone skill installations. The repository is initially private; GitHub-based distribution requires access.
+These are development instructions based on the host documentation. Use a synthetic project and avoid overlapping standalone skill installations. Codex and Cursor steps have not been executed yet.
 
 ### Claude Code
 
@@ -109,7 +120,7 @@ For a bad local update, disable the plugin and test a known-good distribution co
 
 `scripts/update_skills.py` compares complete Git objects and requires the lock to be an ancestor. Only non-executable Markdown under `workflows/` (excluding instruction files and hidden paths) and root README, changelog, and roadmap changes are ordinary. Every other path, including mandatory principles, license, code, configuration, and unknown types, stops with **MANUAL HOLD**, without publishing a candidate. A human reviews and updates sensitive changes through a separate PR.
 
-Ordinary changes deterministically advance numeric `-dev.N`, or the patch of a stable version, regenerate all packages, and update the changelog. No pin change means no bump. The fixed `automation/update-skills` branch is published with an exact lease after isolated candidate tests. Existing candidates must exactly match reconstruction from their main-ancestor parent, pin, version, and changelog; human edits, forks, orphaned branches, draft PRs, `manual-review` labels, `MANUAL HOLD` in PR bodies, and closed unmerged automation PRs stop automation. These holds are never cleared by a newer upstream update. Closing an unmerged automation PR or deleting its branch alone intentionally keeps the stop signal.
+Ordinary changes deterministically advance numeric `-dev.N` or `-canary.N`, or the patch of a stable version, regenerate all packages, and update the changelog. No pin change means no bump. The fixed `automation/update-skills` branch is published with an exact lease after isolated candidate tests. Existing candidates must exactly match reconstruction from their main-ancestor parent, pin, version, and changelog; human edits, forks, orphaned branches, draft PRs, `manual-review` labels, `MANUAL HOLD` in PR bodies, and closed unmerged automation PRs stop automation. These holds are never cleared by a newer upstream update. Closing an unmerged automation PR or deleting its branch alone intentionally keeps the stop signal.
 
 To retire a closed, unmerged automation PR after human review:
 
@@ -137,7 +148,9 @@ Automatic repository synchronization was independently verified on 2026-09-21. A
 
 Live testing caught a generated-help false hold and post-push PR-head propagation timing; fixes were reviewed and merged through PRs #5 and #6, with 37 regression tests passing. The fresh PR #7 case required neither manual metadata repair nor manual merge. Daily fallback is configured; its timer was not waited for. Push delivery, manual resends, automatic merging, and manual no-op execution were observed.
 
-Initialization provides generated packages and structural/regression tests. **Actual Claude Code, Codex, and Cursor installation, automatic skill selection, and startup/context-loss behavior remain unverified.** No public marketplace submission, release, host installation, or automatic Claude/Codex principle loading has been performed.
+Claude Code 2.1.283 (2026-09-27): `claude plugin validate` passes for the catalog and plugin; a local-directory marketplace install into an isolated configuration installed `vstack@vllnt-stack` 0.1.0-canary.1 with all 22 skills, and a maintainer session with the local install listed every `vstack:*` skill. Installation from the public GitHub source, automatic skill selection, and the README acceptance checklist remain unverified.
+
+**Codex and Cursor installation, and startup/context-loss behavior in every host, remain unverified.** No public marketplace submission, release tag, or automatic Claude/Codex principle loading has been performed.
 
 Host format sources consulted during initialization:
 

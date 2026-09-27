@@ -20,6 +20,7 @@ import urllib.request
 
 ROOT = Path(__file__).resolve().parents[1]
 UPSTREAM = "https://github.com/vllnt/skills.git"
+REPOSITORY = "https://github.com/vllnt/stack"
 HOSTS = ("claude", "codex", "cursor")
 PRINCIPLES = tuple(f"vllnt-{name}-principles" for name in ("thinking", "orchestration", "collaboration"))
 MAX_ARCHIVE = 32 * 1024 * 1024
@@ -221,6 +222,9 @@ def build(files: dict[str, bytes], lock: dict, version: str) -> dict[str, bytes]
         manifest = {"name": "vstack", "version": version,
                     "description": "Vstack portable workflows and engineering principles.",
                     "author": {"name": "vllnt"}, "license": "MIT"}
+        if host == "claude":
+            manifest.update({"homepage": REPOSITORY, "repository": REPOSITORY,
+                             "keywords": ["workflows", "engineering", "principles", "skills"]})
         if host == "codex":
             manifest["$schema"] = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
         manifest_path = {"claude": ".claude-plugin/plugin.json", "codex": "plugin.json",
@@ -232,9 +236,11 @@ def build(files: dict[str, bytes], lock: dict, version: str) -> dict[str, bytes]
             path: hashlib.sha256(content).hexdigest() for path, content in sorted(package.items())}})
         output.update({f"plugins/{host}/{path}": content for path, content in package.items()})
     for host in ("claude", "cursor"):
-        output[f".{host}-plugin/marketplace.json"] = encoded({
-            "name": "vllnt-stack", "owner": {"name": "vllnt"},
-            "plugins": [{"name": "vstack", "source": f"./plugins/{host}"}]})
+        catalog = {"name": "vllnt-stack", "owner": {"name": "vllnt"},
+                   "plugins": [{"name": "vstack", "source": f"./plugins/{host}"}]}
+        if host == "claude":
+            catalog["description"] = "Vstack portable workflows and engineering principles for Claude Code."
+        output[f".{host}-plugin/marketplace.json"] = encoded(catalog)
     output[".agents/plugins/marketplace.json"] = encoded({
         "name": "vllnt-stack", "interface": {"displayName": "Vstack"},
         "plugins": [{"name": "vstack", "source": {"source": "local", "path": "./plugins/codex"},

@@ -1,4 +1,5 @@
 {
+  "description": "Vstack portable workflows and engineering principles for Claude Code.",
   "name": "vllnt-stack",
   "owner": {
     "name": "vllnt"

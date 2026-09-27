@@ -70,11 +70,13 @@ def base_head():
 
 
 def bump(version):
-    match = re.fullmatch(r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-dev\.(0|[1-9]\d*))?", version)
+    match = re.fullmatch(r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-(dev|canary)\.(0|[1-9]\d*))?", version)
     if not match:
         raise Stop("VERSION needs human review")
-    major, minor, patch, dev = match.groups()
-    return f"{major}.{minor}.{patch}-dev.{int(dev)+1}" if dev is not None else f"{major}.{minor}.{int(patch)+1}"
+    major, minor, patch, channel, number = match.groups()
+    if channel is not None:
+        return f"{major}.{minor}.{patch}-{channel}.{int(number)+1}"
+    return f"{major}.{minor}.{int(patch)+1}"
 
 
 def ordinary(path):
