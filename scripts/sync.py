@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import base64
 import gzip
 import hashlib
 import io
@@ -220,17 +219,16 @@ def payload(files: dict[str, bytes]) -> tuple[dict[str, bytes], bytes]:
     return skills, rule.encode()
 
 
-def icon_svg(png: bytes) -> bytes:
-    """Wrap a square PNG in the SVG file Claude's plugin directory looks for."""
-    if png[:8] != b"\x89PNG\r\n\x1a\n":
+def icon_png(png: bytes) -> bytes:
+    """Check the PNG shipped as Claude's plugin icon; listings reject SVGs with embedded images."""
+    if png[:8] != b"\x89PNG\r\n\x1a\n" or png[12:16] != b"IHDR":
         raise Invalid("Claude icon must be a PNG")
     width, height = struct.unpack(">II", png[16:24])
     if width != height or width < 128:
         raise Invalid("Claude icon must be square and at least 128px")
-    data = base64.b64encode(png).decode()
-    return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
-            f'viewBox="0 0 {width} {height}"><image width="{width}" height="{height}" '
-            f'href="data:image/png;base64,{data}"/></svg>\n').encode()
+    if len(png) > MAX_FILE:
+        raise Invalid("Claude icon must be at most 2 MiB")
+    return png
 
 
 def build(files: dict[str, bytes], lock: dict, version: str) -> dict[str, bytes]:
@@ -244,14 +242,15 @@ def build(files: dict[str, bytes], lock: dict, version: str) -> dict[str, bytes]
                     "author": {"name": "vllnt"}, "license": "MIT"}
         if host == "claude":
             manifest.update({"homepage": HOMEPAGE, "repository": REPOSITORY,
-                             "keywords": ["workflows", "engineering", "principles", "skills"]})
+                             "keywords": ["workflows", "engineering", "principles", "skills"],
+                             "icon": "./.claude-plugin/icon.png"})
         if host == "codex":
             manifest["$schema"] = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
         manifest_path = {"claude": ".claude-plugin/plugin.json", "codex": "plugin.json",
                          "cursor": ".cursor-plugin/plugin.json"}[host]
         package = {**skills, "LICENSE": files["LICENSE"], manifest_path: encoded(manifest)}
         if host == "claude":
-            package[".claude-plugin/icon.svg"] = icon_svg(CLAUDE_ICON.read_bytes())
+            package[".claude-plugin/icon.png"] = icon_png(CLAUDE_ICON.read_bytes())
         if host == "cursor":
             package["rules/vstack-principles.mdc"] = rule
         package["SOURCE.json"] = encoded({"upstream": lock, "files": {

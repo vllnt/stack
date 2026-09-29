@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.1.0-canary.6
+
+- Fix the Claude plugin icon being rejected as `ICON_INVALID`: ship the vllnt logo as `.claude-plugin/icon.png`, named by `icon` in `plugin.json`, instead of an SVG that embedded the PNG.
+
 - Remove the previous marketplace name from the README; the migration note stays in this changelog.
 
 ## 0.1.0-canary.5

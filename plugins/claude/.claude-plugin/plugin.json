@@ -4,6 +4,7 @@
   },
   "description": "Evidence-led engineering workflows to plan, build, review, and ship software with AI agents. Part of the vllnt universe: open, sovereign tools for freedom by design (vllnt.com).",
   "homepage": "https://vllnt.com",
+  "icon": "./.claude-plugin/icon.png",
   "keywords": [
     "workflows",
     "engineering",
@@ -13,5 +14,5 @@
   "license": "MIT",
   "name": "vstack",
   "repository": "https://github.com/vllnt/stack",
-  "version": "0.1.0-canary.5"
+  "version": "0.1.0-canary.6"
 }
