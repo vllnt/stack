@@ -105,6 +105,15 @@ check "invalid private pattern is an error" 2 'PRIVACY_DENYLIST_EXTRA=Acme[Corp'
 refute "invalid pattern text leaked to output" "Acme"
 check "private pattern matching empty string is an error" 2 'PRIVACY_DENYLIST_EXTRA=acme|'
 
+# PCRE-only syntax compiles under GNU grep -E but not under git grep -E, the
+# engine that scans. It must be rejected by index, before the scan runs.
+plant "Plain documentation."
+for pcre in '(?i)acme' '(?:acme)' 'acme(?=x)' 'acme\p{L}'; do
+  check "git-grep-invalid pattern $pcre is rejected up front" 2 "PRIVACY_DENYLIST_EXTRA=$pcre"
+  grep -q 'denylist pattern #[0-9]* is not a valid regex' <<< "$LAST_OUTPUT" || { echo "FAIL $pcre not reported by pattern index" >&2; failures=$((failures + 1)); }
+  refute "pcre pattern text leaked to output" "acme"
+done
+
 cp "$REPO/.privacy-allowlist" "$REPO/allow.bak"
 plant "host: $TAILNET"
 printf '[unclosed\n' > "$REPO/.privacy-allowlist"

@@ -33,18 +33,34 @@ patterns="$(mktemp)"
 allow_patterns="$(mktemp)"
 hits="$(mktemp)"
 kept="$(mktemp)"
-trap 'rm -f "$tracked" "$extra" "$patterns" "$allow_patterns" "$hits" "$kept"' EXIT
+probe_dir="$(mktemp -d)"
+trap 'rm -rf "$tracked" "$extra" "$patterns" "$allow_patterns" "$hits" "$kept" "$probe_dir"' EXIT
+printf '\n' > "$probe_dir/empty.txt"
+printf 'a b\n' > "$probe_dir/text.txt"
 
 strip() { sed -E '/^[[:space:]]*(#|$)/d'; }
 # lines <file>: the file with a guaranteed final newline.
 lines() { cat "$1"; printf '\n'; }
 
-# valid_regexes <file> <label>: every line must compile and must not match the empty string.
+# rx <engine> <flags> <pattern> <probe file>: run one pattern through the engine
+# that will use it. git grep -E (POSIX regcomp) rejects PCRE syntax such as
+# (?i), (?:...) and lookarounds that GNU grep -E accepts, so denylist patterns
+# are validated with git grep itself; allowlist patterns run under GNU grep.
+rx() {
+  local engine="$1" flags="$2" pattern="$3" probe="$4"
+  if [[ "$engine" == git ]]; then
+    git -C "$probe_dir" grep --no-index "-${flags}E" -e "$pattern" -- "$probe" 2> /dev/null
+  else
+    grep "-${flags}E" -e "$pattern" "$probe_dir/$probe" 2> /dev/null
+  fi
+}
+
+# valid_regexes <file> <label> <engine>: every line must compile and must not match the empty string.
 valid_regexes() {
-  local file="$1" label="$2" n=0 line status probe
+  local file="$1" label="$2" engine="$3" n=0 line status probe
   while IFS= read -r line || [[ -n "$line" ]]; do
     n=$((n + 1))
-    printf '\n' | grep -qE -e "$line" 2> /dev/null
+    rx "$engine" q "$line" empty.txt > /dev/null
     status=$?
     if (( status > 1 )); then
       echo "error: $label pattern #$n is not a valid regex" >&2
@@ -55,8 +71,8 @@ valid_regexes() {
       return 1
     fi
     # Zero-width patterns (\b, ^, $) match inside real text but report nothing.
-    probe="$(printf 'a b\n' | grep -oE -e "$line" 2> /dev/null)"
-    if [[ -z "$probe" ]] && printf 'a b\n' | grep -qE -e "$line" 2> /dev/null; then
+    probe="$(rx "$engine" o "$line" text.txt)"
+    if [[ -z "$probe" ]] && rx "$engine" q "$line" text.txt > /dev/null; then
       echo "error: $label pattern #$n is zero-width" >&2
       return 1
     fi
@@ -79,8 +95,8 @@ if [[ ! -s "$tracked" ]]; then
   echo "error: $DENY has no patterns" >&2
   exit 2
 fi
-valid_regexes "$patterns" "denylist" || exit 2
-valid_regexes "$allow_patterns" "allowlist" || exit 2
+valid_regexes "$patterns" "denylist" git || exit 2
+valid_regexes "$allow_patterns" "allowlist" grep || exit 2
 if [[ -s "$allow_patterns" ]] && [[ -z "$(printf '%s\n' 'zz/canary.md:1:canary.ts''.net' | grep -avEf "$allow_patterns")" ]]; then
   echo "error: allowlist is too broad; it would hide an obvious match" >&2
   exit 2
