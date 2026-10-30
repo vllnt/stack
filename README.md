@@ -99,6 +99,8 @@ python3 scripts/sync.py --source /path/to/skills
 python3 scripts/sync.py --check --source /path/to/skills
 ```
 
+The `Privacy Guard` workflow also runs gitleaks over full history and `scripts/privacy-denylist.sh`, which checks tracked files against the structural patterns in `.privacy-denylist` minus the narrow `.privacy-allowlist`. Matches report `path:line` only. Run it locally with `bash scripts/privacy-denylist.sh`; `scripts/test-privacy-denylist.sh` covers its failure paths. Names that must stay private go in an untracked `.privacy-denylist.local` or the optional `PRIVACY_DENYLIST_EXTRA` repository secret, never in the tracked file.
+
 `--source` reads committed objects at the lock's SHA, ignoring working-tree edits. `--check` rebuilds expected bytes in memory and reports missing, stale, extra, or changed generated files without writing outputs. Its default path downloads the pin; network/access failures are failures, never a successful empty result.
 
 The generator accepts only regular archive files/directories, validates skill identities and local dependency links, and bounds archive bytes, expanded bytes, file size, member count, and total payload. It rejects symlink output paths before writing. It stages output and replaces only the three generated host directories and three catalog files, rolling back ordinary replacement errors. Run only one writer at a time in a trusted checkout: this is not a filesystem sandbox or a crash-proof transaction across all targets.

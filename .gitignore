@@ -2,3 +2,4 @@ __pycache__/
 *.pyc
 .vstack-stage-*/
 .DS_Store
+.privacy-denylist.local
