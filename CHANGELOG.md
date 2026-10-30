@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Validate `Privacy Guard` denylist patterns with `git grep -E`, the engine that scans, so PCRE-only syntax such as `(?i)` or `(?:...)` fails by pattern index instead of an opaque `git grep failed`.
+- Validate `Privacy Guard` denylist patterns with `git grep -E`, the engine that scans, so PCRE-only syntax such as `(?i)` or `(?:...)` fails by pattern index instead of an opaque `git grep failed`; every invalid pattern is reported in one run.
 
 - Add a `Privacy Guard` workflow: gitleaks over full history plus a structural denylist check with an allowlist, optional private patterns, and withheld match content.
 

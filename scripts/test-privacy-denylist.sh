@@ -104,6 +104,8 @@ grep -q '::warning' <<< "$LAST_OUTPUT" || { echo "FAIL no warning when private p
 check "invalid private pattern is an error" 2 'PRIVACY_DENYLIST_EXTRA=Acme[Corp'
 refute "invalid pattern text leaked to output" "Acme"
 check "private pattern matching empty string is an error" 2 'PRIVACY_DENYLIST_EXTRA=acme|'
+check "every bad private pattern is reported, not only the first" 2 "PRIVACY_DENYLIST_EXTRA=$(printf '(?i)acme\nfine-term\nacme(?:x)')"
+[[ "$(grep -c 'is not a valid regex' <<< "$LAST_OUTPUT")" == 2 ]] || { echo "FAIL expected two reported patterns" >&2; failures=$((failures + 1)); }
 
 # PCRE-only syntax compiles under GNU grep -E but not under git grep -E, the
 # engine that scans. It must be rejected by index, before the scan runs.

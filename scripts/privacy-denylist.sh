@@ -55,28 +55,32 @@ rx() {
   fi
 }
 
-# valid_regexes <file> <label> <engine>: every line must compile and must not match the empty string.
+# valid_regexes <file> <label> <engine>: every line must compile and must not match
+# the empty string. Reports every bad pattern by index so one run finds them all.
 valid_regexes() {
-  local file="$1" label="$2" engine="$3" n=0 line status probe
+  local file="$1" label="$2" engine="$3" n=0 bad=0 line status probe
   while IFS= read -r line || [[ -n "$line" ]]; do
     n=$((n + 1))
     rx "$engine" q "$line" empty.txt > /dev/null
     status=$?
     if (( status > 1 )); then
       echo "error: $label pattern #$n is not a valid regex" >&2
-      return 1
+      bad=1
+      continue
     fi
     if (( status == 0 )); then
       echo "error: $label pattern #$n matches the empty string" >&2
-      return 1
+      bad=1
+      continue
     fi
     # Zero-width patterns (\b, ^, $) match inside real text but report nothing.
     probe="$(rx "$engine" o "$line" text.txt)"
     if [[ -z "$probe" ]] && rx "$engine" q "$line" text.txt > /dev/null; then
       echo "error: $label pattern #$n is zero-width" >&2
-      return 1
+      bad=1
     fi
   done < "$file"
+  return "$bad"
 }
 
 if [[ ! -f "$DENY" ]]; then
