@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add a `Privacy Guard` workflow: gitleaks over full history plus a structural denylist check with an allowlist, optional private patterns, and withheld match content.
+
 ## 0.1.0-canary.6
 
 - Fix the Claude plugin icon being rejected as `ICON_INVALID`: ship the vllnt logo as `.claude-plugin/icon.png`, named by `icon` in `plugin.json`, instead of an SVG that embedded the PNG.
