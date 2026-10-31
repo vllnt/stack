@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix the `Privacy Guard` denylist check: validate patterns with the same `git grep -iE` engine that scans them, reject PCRE-only escapes, normalize CRLF and blank private lines, and report an invalid pattern by source and line only. Mirrors vllnt/skills.
+
 - Accept the reviewed Skills update from `352eaf7b167a6761161415711ef9d55db26d91d6` to `7483dd4dfd8502fd2db376c13e44fa0cbc464161` as `0.1.0-canary.8` through a separate protected PR, because the range changes sensitive paths. Adds the `@vllnt/convex-api-keys`, `@vllnt/logger` and `@vllnt/analytics` defaults, marks `@vllnt/ui-core` and `@vllnt/ui-native` experimental opt-in, and moves `@vllnt/dig` to not yet default. The automatic sensitivity policy is unchanged.
 
 - Accept the reviewed Skills update from `472c216f2f043f0add1f83540cc46ea53d20a7cd` to `352eaf7b167a6761161415711ef9d55db26d91d6` as `0.1.0-canary.7` through a separate protected PR, because the range changes sensitive paths. Includes the published `@vllnt/*` package defaults annex and new direct improvement, session-refocusing, and full-environment PR testing workflows. The automatic sensitivity policy is unchanged.
