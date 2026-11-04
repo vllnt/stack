@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Accept the reviewed Skills `v0.2.0` update from `7483dd4dfd8502fd2db376c13e44fa0cbc464161` to `06365b10b42d1c56308b946187d51ccf1efa7d33` as `0.1.0-canary.9` through a separate protected PR, because the range changes sensitive paths. Adds the `init-project` workflow (replacing `build-project`), defaults packages to the newest stable release behind the 7-day age gate, defers fast-changing tool detail to official docs, and adds machine security and privacy workflows. The automatic sensitivity policy is unchanged.
+
 - Fix the `Privacy Guard` denylist check: validate patterns with the same `git grep -iE` engine that scans them, reject PCRE-only escapes, normalize CRLF and blank private lines, and report an invalid pattern by source and line only. Mirrors vllnt/skills.
 
 - Accept the reviewed Skills update from `352eaf7b167a6761161415711ef9d55db26d91d6` to `7483dd4dfd8502fd2db376c13e44fa0cbc464161` as `0.1.0-canary.8` through a separate protected PR, because the range changes sensitive paths. Adds the `@vllnt/convex-api-keys`, `@vllnt/logger` and `@vllnt/analytics` defaults, marks `@vllnt/ui-core` and `@vllnt/ui-native` experimental opt-in, and moves `@vllnt/dig` to not yet default. The automatic sensitivity policy is unchanged.
