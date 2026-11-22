@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Extend `Privacy Guard` with optional `.privacy-baseline` support, so the required commit-metadata check can scan `baseline..HEAD` on push when historical exposure has been accepted. Mirrors vllnt/skills.
+
 - Accept the reviewed Skills `v0.2.0` update from `7483dd4dfd8502fd2db376c13e44fa0cbc464161` to `06365b10b42d1c56308b946187d51ccf1efa7d33` as `0.1.0-canary.9` through a separate protected PR, because the range changes sensitive paths. Adds the `init-project` workflow (replacing `build-project`), defaults packages to the newest stable release behind the 7-day age gate, defers fast-changing tool detail to official docs, and adds machine security and privacy workflows. The automatic sensitivity policy is unchanged.
 
 - Fix the `Privacy Guard` denylist check: validate patterns with the same `git grep -iE` engine that scans them, reject PCRE-only escapes, normalize CRLF and blank private lines, and report an invalid pattern by source and line only. Mirrors vllnt/skills.
