@@ -1,26 +1,31 @@
 ## Contract
 
-- Input: Base, candidate, scope, acceptance criteria, environment, constraints, complete diff, callers, tests, and configuration.
-- Output: Ranked actionable findings, reviewed perspectives, exclusions, limitations, and next checks.
-- Effects: Read-only review. It does not edit, approve, merge, publish, or submit an external review.
+- Input: Mode (`plan` or `review`), base, candidate, scope, and criteria; for review, the depth (`quick` for medium risk, `targeted` for high risk or an explicit review request) and the diff, callers, tests, and configuration.
+- Output: Plan mode returns applicable perspectives with a runnable proof each and proof checks to add. Review mode returns ranked findings tagged Important, Nit, or Pre-existing, each with bug class and reproduction or scenario, plus exclusions, limitations, and next checks.
+- Effects: Plan mode is read-only. Review mode never edits product code, approves, merges, publishes, or submits an external review; where the caller permits writes it may add a failing evidence test (caller-owned), otherwise it describes the reproduction as steps or a command.
 
 ### Acceptance
 
-- Findings bind to the exact base, candidate, and reviewed scope.
-- Checked perspectives and material exclusions are explicit.
-- Every required finding is actionable and evidence-backed.
-- A no-finding conclusion names reviewed scope, exclusions, and remaining risk.
+- Plan mode names each applicable perspective, its runnable proof, and any proof check to add.
+- Review covers only the stated depth and scope, with findings bound to the exact base and candidate.
+- A no-finding conclusion names scope, exclusions, and remaining risk.
 
 ## Procedure
 
-1. Set the base, candidate, scope, acceptance criteria, environment, and constraints. Read consumer rules, the complete diff, relevant callers, tests, and configuration.
-2. Map changed entry points through contracts, state, consumers, and external effects. Assess applicable security, correctness, reliability, performance/cost, maintainability, developer experience, observability, and delivery. Compare added or retained complexity with deletion, reuse, or consolidation. Require an evidenced maintenance cost and a concrete simpler alternative preserving supported contracts before making simplification a required finding.
-3. Investigate supported boundaries, denial, retry, timeout, cancellation, concurrency, and recovery. Separate demonstrated defects, supported risks, and unanswered questions.
-4. Deduplicate and rank findings. Each required finding includes location, scenario, evidence, impact, smallest repair, and verification.
-5. Return material risks, uncertainties, and current evidence to the caller's quality validation. When standalone, return coverage gaps and the next check. Re-review only affected findings for new candidate or evidence; a bounded review can complete without target-code repair.
+1. Read consumer rules and the relevant contracts, callers, tests, and configuration.
+2. Plan mode: select the perspectives the change's risk makes applicable; name each one's runnable proof and any proof check to add at the project's existing owner.
 
-## Pitfalls
-
-- Counts, a single caller, unfamiliar structure, or missing usage evidence do not establish redundancy. Inspect supported consumers and boundary responsibilities; distinguish project requirements from style preferences.
-- A passing test outside the changed contract does not clear a finding; bind the test, base, candidate, and scenario.
-- Absence of findings is not approval; report exclusions and remaining risk.
+   | Perspective | Proof | Applies when |
+   |---|---|---|
+   | Correctness | Tests of changed behavior and failure paths | Always |
+   | Security | Denial or authorization test, secret scan, dependency audit | Auth, input, data access |
+   | Performance | Benchmark against base, size budget | Hot paths, rendering, queries |
+   | Scalability | Query-count or N+1 test; load test if relevant | Loops over data, new endpoints |
+   | Observability | Test that entry points emit logs, metrics, or traces | New entry points, jobs, error paths |
+   | Reliability | Timeout, retry, and failure tests | External calls, queues |
+   | Compatibility | Contract or consumer test | Public APIs, schemas |
+   | Maintainability | Reduction pass, lint, types | Always |
+   | Accessibility | Automated check plus keyboard path | UI |
+3. Review mode. Quick: read the diff once against the applicable perspectives. Targeted: review only the risk area or requested scope, mapping entry points through contracts, state, consumers, and external effects and probing boundaries, denial, retry, timeout, cancellation, concurrency, and recovery; separate demonstrated defects, supported risks, and open questions.
+4. Propose a block only per the caller's quality validation: a reproduction (a failing evidence test or steps, per Effects), a violated explicit requirement, or a concrete failure scenario for an uninvolved agent to re-derive without your verdict. Record location, scenario, evidence, impact, bug class (fix every instance), smallest repair, and verification; skip earlier-round repeats. A maintainability finding also needs evidenced cost and a simpler alternative. Do not repair product code. Deduplicate and rank.
+5. Return risks and evidence to the caller's quality validation (standalone: coverage gaps and next check); re-review only affected findings.
