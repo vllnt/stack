@@ -21,9 +21,21 @@ def pr(head=A):
 
 
 def protected():
-    return {"required_status_checks": {"strict": True, "checks": [{"context": "validate", "app_id": 15368}]},
+    return {"required_status_checks": {"strict": True, "checks": [
+                {"context": "validate", "app_id": 15368},
+                {"context": "Privacy Guard", "app_id": 15368}]},
             "enforce_admins": {"enabled": True}, "required_pull_request_reviews": {"required_approving_review_count": 0},
             "allow_force_pushes": {"enabled": False}, "allow_deletions": {"enabled": False}}
+
+
+def check_run(name, **overrides):
+    run = {"name": name, "app": {"id": 15368}, "head_sha": A, "status": "completed", "conclusion": "success"}
+    run.update(overrides)
+    return run
+
+
+def check_payload(*runs):
+    return {"total_count": len(runs), "check_runs": list(runs)}
 
 
 @contextlib.contextmanager
@@ -146,24 +158,94 @@ class BoundaryTests(unittest.TestCase):
                 u.fence(A, A)
 
     def test_missing_failed_skipped_cancelled_wrong_app_checks(self):
-        for conclusion in (None, "failure", "skipped", "cancelled", "timed_out"):
-            check = {"name": "validate", "app": {"id": 15368}, "head_sha": A, "status": "completed", "conclusion": conclusion}
-            with patch.object(u, "api", return_value={"total_count": 1, "check_runs": [check]}):
+        other = {"validate": "Privacy Guard", "Privacy Guard": "validate"}
+        for name in ("validate", "Privacy Guard"):
+            for conclusion in (None, "failure", "skipped", "cancelled", "timed_out"):
+                with patch.object(u, "api", return_value=check_payload(check_run(other[name]), check_run(name, conclusion=conclusion))):
+                    self.assertFalse(u.checks_pass(A))
+            for bad in (check_run(name, app={"id": 1}), check_run(name, head_sha=B),
+                        check_run(name, status="in_progress", conclusion=None)):
+                with patch.object(u, "api", return_value=check_payload(check_run(other[name]), bad)):
+                    self.assertFalse(u.checks_pass(A))
+            with patch.object(u, "api", return_value=check_payload(check_run(other[name]))):
                 self.assertFalse(u.checks_pass(A))
-        for checks in ([], [{"name": "validate", "app": {"id": 1}, "head_sha": A, "status": "completed", "conclusion": "success"}]):
-            with patch.object(u, "api", return_value={"total_count": len(checks), "check_runs": checks}):
-                self.assertFalse(u.checks_pass(A))
+        duplicate_failure = check_payload(check_run("validate"), check_run("Privacy Guard"),
+                                          check_run("Privacy Guard", conclusion="failure"))
+        with patch.object(u, "api", return_value=duplicate_failure):
+            self.assertFalse(u.checks_pass(A))
+        with patch.object(u, "api", return_value=check_payload()):
+            self.assertFalse(u.checks_pass(A))
+        # Optional checks may still be running. Only the reviewed contract gates the merge.
+        ready = check_payload(check_run("Privacy Guard"), check_run("validate"),
+                              check_run("Analyze (python)", status="in_progress", conclusion=None),
+                              check_run("CodeQL", app={"id": 57789}, status="in_progress", conclusion=None))
+        with patch.object(u, "api", return_value=ready):
+            self.assertTrue(u.checks_pass(A))
         with patch.object(u, "api", return_value={"total_count": 101}), self.assertRaises(u.Stop):
             u.checks_pass(A)
 
     def test_protection_requires_reviewed_contract(self):
+        self.assertEqual(u.REQUIRED_CHECKS, {("validate", 15368), ("Privacy Guard", 15368)})
         with patch.object(u, "api", return_value=protected()):
+            u.protection()
+        reversed_rule = protected()
+        reversed_rule["required_status_checks"]["checks"].reverse()
+        with patch.object(u, "api", return_value=reversed_rule):
+            u.protection()
+        for checks in (
+            [{"context": "validate", "app_id": 15368}],
+            [{"context": "Privacy Guard", "app_id": 15368}],
+            [{"context": "validate", "app_id": 15368}, {"context": "Privacy Guard", "app_id": 1}],
+            [{"context": "validate", "app_id": 15368}, {"context": "Privacy Guard", "app_id": 15368},
+             {"context": "Analyze (python)", "app_id": 15368}],
+        ):
+            value = protected()
+            value["required_status_checks"]["checks"] = checks
+            with patch.object(u, "api", return_value=value), self.assertRaises(u.Stop):
+                u.protection()
+        loose = protected()
+        loose["required_status_checks"]["strict"] = False
+        with patch.object(u, "api", return_value=loose), self.assertRaises(u.Stop):
             u.protection()
         for key in protected():
             value = protected()
             del value[key]
             with patch.object(u, "api", return_value=value), self.assertRaises(u.Stop):
                 u.protection()
+
+    def test_merge_waits_until_every_required_check_succeeds_on_exact_head(self):
+        pending = check_payload(check_run("validate"), check_run("Privacy Guard", status="in_progress", conclusion=None))
+        ready = check_payload(check_run("Privacy Guard"), check_run("validate"))
+        polls = iter((pending, ready))
+
+        def remote(path, method="GET", body=None, token_env=None):
+            if method == "PUT":
+                self.assertEqual(body, {"sha": A, "merge_method": "squash"})
+                return {"merged": True}
+            if path.startswith("commits/"):
+                self.assertEqual(token_env, "GITHUB_TOKEN")
+                self.assertIn(A, path)
+                return next(polls)
+            if path == "branches/main/protection":
+                return protected()
+            return pr()
+
+        with patch.object(u, "api", side_effect=remote) as remote_api, patch.object(u, "fence"), patch.object(u.time, "sleep") as sleep:
+            u.merge(pr(), A, B, B)
+        sleep.assert_called_once_with(15)
+        self.assertEqual(sum(c.args[1:2] == ("PUT",) for c in remote_api.call_args_list), 1)
+
+    def test_merge_does_not_start_while_a_required_check_is_missing(self):
+        def remote(path, method="GET", body=None, token_env=None):
+            self.assertNotEqual(method, "PUT")
+            if path.startswith("commits/"):
+                return check_payload(check_run("validate"))
+            return pr()
+
+        with patch.object(u, "api", side_effect=remote) as remote_api, patch.object(u, "fence"), patch.object(u.time, "sleep") as sleep, self.assertRaises(u.Stop):
+            u.merge(pr(), A, B, B)
+        self.assertEqual(sleep.call_count, 19)
+        self.assertFalse(any(c.args[1:2] == ("PUT",) for c in remote_api.call_args_list))
 
     def test_merge_positive_and_uncertain_failure_no_retry(self):
         for merged in (True, False):
@@ -337,9 +419,7 @@ class BoundaryTests(unittest.TestCase):
                 u.check_closed_holds([dict(closed, **change)], {1: A})
 
     def test_checks_use_only_builtin_token_and_missing_token_has_no_fallback(self):
-        check = {"name": "validate", "app": {"id": 15368}, "head_sha": A,
-                 "status": "completed", "conclusion": "success"}
-        response = u.sync.encoded({"total_count": 1, "check_runs": [check]})
+        response = u.sync.encoded(check_payload(check_run("validate"), check_run("Privacy Guard")))
         with patch.dict(os.environ, {"GH_TOKEN": "synthetic-personal", "GITHUB_TOKEN": "synthetic-builtin"}, clear=True):
             with patch.object(u, "run", return_value=response) as remote:
                 self.assertTrue(u.checks_pass(A))
