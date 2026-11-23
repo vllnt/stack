@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Align the skills updater with current main protection. The reviewed merge contract now requires strict `validate` and `Privacy Guard` (both GitHub Actions app 15368), and auto-merge waits until every required check has succeeded on the exact PR head. Scheduled runs had been stopping because the contract listed only `validate`.
+
 - Extend `Privacy Guard` with optional `.privacy-baseline` support, so the required commit-metadata check can scan `baseline..HEAD` on push when historical exposure has been accepted. Mirrors vllnt/skills.
 
 - Accept the reviewed Skills `v0.2.0` update from `7483dd4dfd8502fd2db376c13e44fa0cbc464161` to `06365b10b42d1c56308b946187d51ccf1efa7d33` as `0.1.0-canary.9` through a separate protected PR, because the range changes sensitive paths. Adds the `init-project` workflow (replacing `build-project`), defaults packages to the newest stable release behind the 7-day age gate, defers fast-changing tool detail to official docs, and adds machine security and privacy workflows. The automatic sensitivity policy is unchanged.

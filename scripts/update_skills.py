@@ -17,6 +17,10 @@ SOURCE = "vllnt/skills"
 BRANCH = "automation/update-skills"
 SHA = re.compile(r"[0-9a-f]{40}\Z")
 MARKER = "vstack-skills-update-v1"
+# Shared reviewed merge contract. protection() refuses any other required-check
+# set; checks_pass() waits until each of these has succeeded on the exact head.
+# Both contexts are GitHub Actions (app 15368).
+REQUIRED_CHECKS = {("validate", 15368), ("Privacy Guard", 15368)}
 
 
 class Stop(RuntimeError):
@@ -154,10 +158,9 @@ def candidate(base, pin, source):
 def protection():
     rule = api("branches/main/protection")
     checks = rule.get("required_status_checks") or {}
-    expected = {("validate", 15368)}
     actual = {(c.get("context"), c.get("app_id")) for c in checks.get("checks", [])}
     reviews = rule.get("required_pull_request_reviews") or {}
-    if (checks.get("strict") is not True or actual != expected or
+    if (checks.get("strict") is not True or actual != REQUIRED_CHECKS or
             rule.get("enforce_admins", {}).get("enabled") is not True or
             reviews.get("required_approving_review_count") != 0 or
             rule.get("allow_force_pushes", {}).get("enabled") is not False or
@@ -263,8 +266,14 @@ def checks_pass(head):
     value = api(f"commits/{head}/check-runs?per_page=100", token_env="GITHUB_TOKEN")
     if value.get("total_count", 101) > 100:
         raise Stop("check inventory exceeds bound")
-    checks = [c for c in value.get("check_runs", []) if c.get("name") == "validate" and (c.get("app") or {}).get("id") == 15368]
-    return bool(checks) and all(c.get("head_sha") == head and c.get("status") == "completed" and c.get("conclusion") == "success" for c in checks)
+    runs = value.get("check_runs", [])
+    # Every returned run for a required context must be an exact-head success.
+    # Runs outside the contract, including still-running optional checks, do not count.
+    for name, app_id in REQUIRED_CHECKS:
+        matched = [c for c in runs if c.get("name") == name and (c.get("app") or {}).get("id") == app_id]
+        if not matched or any(c.get("head_sha") != head or c.get("status") != "completed" or c.get("conclusion") != "success" for c in matched):
+            return False
+    return True
 
 
 def merge(pr, head, base, pin, previous_head=None):
@@ -294,7 +303,7 @@ def merge(pr, head, base, pin, previous_head=None):
             return
         if attempt < 19:
             time.sleep(15)
-    raise Stop("exact-head validate success missing; PR remains open")
+    raise Stop("exact-head required-check success missing; PR remains open")
 
 
 def main():
