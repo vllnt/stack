@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Accept the reviewed Skills update from `06365b10b42d1c56308b946187d51ccf1efa7d33` to `730840554d16160fefc701a544492d06e52fb4e5` as `0.1.0-canary.10` through a separate protected PR, because the range changes sensitive paths. Merges overlapping workflows (`improve-codebase` into `improve-code`, `review-ui` into `improve-ui`, `plan-issues` into `manage-issues`, machine privacy and security into `improve-machine`, `explore-decisions` into `plan-work`, `manage-vision` into `manage-roadmap`), cuts bundled context, and adopts verifier-first risk-tiered validation with proportional planning. The automatic sensitivity policy is unchanged.
+
 - Align the skills updater with current main protection. The reviewed merge contract now requires strict `validate` and `Privacy Guard` (both GitHub Actions app 15368), and auto-merge waits until every required check has succeeded on the exact PR head. Scheduled runs had been stopping because the contract listed only `validate`.
 
 - Extend `Privacy Guard` with optional `.privacy-baseline` support, so the required commit-metadata check can scan `baseline..HEAD` on push when historical exposure has been accepted. Mirrors vllnt/skills.
